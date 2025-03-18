@@ -49,7 +49,8 @@ private: // UI
 
     Ui::AppLetTF* ui;
 
-    void setupUI();
+    void setupUI  ();
+    void setupArgs();
     void moveToCenterScreen();
 
 protected:

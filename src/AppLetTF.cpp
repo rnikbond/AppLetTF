@@ -14,8 +14,10 @@
 AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF)
 {
     setupUI  ();
+    setupArgs();
     setupTray();
     setupTF  ();
+    setupArgs();
 
     connect( ui->pushButton, &QPushButton::clicked, [this]{
         changeSettings();
@@ -90,14 +92,34 @@ void AppLetTF::changeSettings() {
 /*!
  * \brief Инициализация
  *
- * При инициализации считывается аргмент командной строки, в котором указан путь к файлу конфигурации:
+ * Если нет файла конфигурации или в конфигурации есть ошибки, вызывается окно для настройки конфигурации.
+ */
+void AppLetTF::init() {
+
+    m_config.restore();
+
+    if( m_config.m_geometry.isValid() ) {
+        setGeometry( m_config.m_geometry );
+    }
+
+    if( !m_config.isIncomplete() ) {
+        changeSettings();
+    }
+
+    m_tf->setConfig( m_config );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Разбор аргументов командной строки
+ *
+ *  При инициализации считывается аргмент командной строки, в котором указан путь к файлу конфигурации:
  * -c=/home/user/applettf.cfg
  * --config=/home/user/applettf.cfg
  *
  * Если такого аргемента нет, используется путь к файлу конфигурации по-умолчанию: "applettf.cfg"
- * Если нет файла конфигурации или в конфигурации есть ошибки, вызывается окно для настройки конфигурации.
  */
-void AppLetTF::init() {
+void AppLetTF::setupArgs() {
 
     QString cfgPath;
 
@@ -115,17 +137,6 @@ void AppLetTF::init() {
     }
 
     m_config.init( cfgPath );
-    m_config.restore();
-
-    if( !m_config.isIncomplete() ) {
-        changeSettings();
-    }
-
-    m_tf->setConfig( m_config );
-
-    if( m_config.m_geometry.isValid() ) {
-        setGeometry( m_config.m_geometry );
-    }
 }
 //----------------------------------------------------------------------------------------------------------
 
