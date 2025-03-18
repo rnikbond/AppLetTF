@@ -3,6 +3,7 @@
 #include <QScreen>
 //----------------------------------------
 #include "methods.h"
+#include "SettingsDialog.h"
 //----------------------------------------
 #include "AppLetTF.h"
 #include "ui_AppLetTF.h"
@@ -14,6 +15,8 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupUI();
 
     m_tf = new TFRequest( this );
+    m_tf->setAsync( true );
+
     connect( m_tf, &TFRequest::executed, this, &AppLetTF::reactOnCmdExecuted );
 
     connect( ui->pushButton, &QPushButton::clicked, [this]{
@@ -71,7 +74,13 @@ void AppLetTF::init() {
     m_config.restore();
 
     if( !m_config.isIncomplete() ) {
-        // change settings
+
+        SettingsDialog settings;
+        settings.setConfig( m_config );
+        if( settings.exec() == QDialog::Accepted ) {
+            m_config = settings.config();
+            m_config.save( geometry() );
+        }
     }
 
     m_tf->setConfig( m_config );

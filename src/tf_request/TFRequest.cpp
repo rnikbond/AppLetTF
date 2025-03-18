@@ -15,9 +15,11 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
 #endif
 
     m_isTouchCursor = true;
+
     m_tf = new QProcess( this );
 
     clear();
+    setAsync( false );
 
     connect( m_tf, QOverload<int,QProcess::ExitStatus>::of(&QProcess::finished)              , this, &TFRequest::reactOnFinished      );
     connect( m_tf,                                         &QProcess::stateChanged           , this, &TFRequest::reactOnStateChanged  );
@@ -25,17 +27,71 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Проверка подключения к Azure DevOps Server
+ */
+void TFRequest::checkConnection() {
+
+    clear();
+
+    QStringList args = {
+        "workfold",
+        QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        QString("-workspace:%1" ).arg(m_config.m_azure.workspace),
+        "-noprompt"
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Загрузка рабочих пространств
+ */
 void TFRequest::workspaces() {
 
-     m_cmd = CommandWorkspaces;
+    m_cmd = CommandWorkspaces;
 
     QStringList args = {
         "workspaces",
          QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
          QString("-collection:%1").arg(m_config.m_azure.url),
+        "-noprompt"
     };
 
-    m_tf->start( m_config.m_azure.tfPath, args );
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Создание нового рабочего пространства
+ * \param name Имя пространства
+ */
+void TFRequest::createWorkspace( const QString& name ) {
+
+    QStringList args = {
+        "workspace",
+        "-new",
+        name,
+        QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        "-noprompt"
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -65,25 +121,10 @@ void TFRequest::reactOnStateChanged( QProcess::ProcessState state ) {
  */
 void TFRequest::reactOnFinished( int exitCode, QProcess::ExitStatus exitStatus ) {
 
+    Q_UNUSED( exitCode   );
     Q_UNUSED( exitStatus );
 
-    m_errCode = exitCode;
-
-    switch( m_errCode ) {
-        case 0: {
-            m_response = m_codec->toUnicode(m_tf->readAllStandardOutput()).split("\n", Qt::SkipEmptyParts);
-            break;
-        }
-        default: {
-            m_errText = m_codec->toUnicode(m_tf->readAllStandardError());
-            break;
-        }
-    }
-
-    qDebug() << "m_err_code:" << m_errCode;
-    qDebug() << "m_err_text:" << m_errText;
-    qDebug() << "m_response:" << m_response;
-
+    parseResponse();
     emit executed();
 
     if( m_isTouchCursor ) {
@@ -101,19 +142,9 @@ void TFRequest::reactOnFinished( int exitCode, QProcess::ExitStatus exitStatus )
  */
 void TFRequest::reactOnErrorOccurred( QProcess::ProcessError error ) {
 
-    qDebug() << QString("reactOnErrorOccurred(%1)").arg(error);
+    Q_UNUSED( error );
 
-    m_errCode = error;
-
-    switch( m_errCode ) {
-        case QProcess::FailedToStart: m_errText = tr("Не удалось запустить программу TF"); break;
-        default                     : m_errText = m_tf->errorString();                     break;
-    }
-
-    qDebug() << "m_err_code:" << m_errCode;
-    qDebug() << "m_err_text:" << m_errText;
-    qDebug() << "m_response:" << m_response;
-
+    parseResponse();
     emit executed();
 
     if( m_isTouchCursor ) {
@@ -122,12 +153,82 @@ void TFRequest::reactOnErrorOccurred( QProcess::ProcessError error ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Выполнение TF запроса с ожиданием завершения
+ * \param args Аргументы запроса
+ */
+void TFRequest::execute( const QStringList& args ) {
+
+    if( m_isTouchCursor ) {
+        QApplication::setOverrideCursor( Qt::WaitCursor );
+    }
+
+    m_tf->start( m_config.m_azure.tfPath, args );
+    m_tf->waitForFinished();
+    parseResponse();
+
+    if( m_isTouchCursor ) {
+        QApplication::restoreOverrideCursor();
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Разбор ответа TF
+ *
+ * Если процесс TF завершился ошибкой, то параметры ошибки записываются в:
+ * \a m_isErr   - устаналивается в true
+ * \a m_errCode - код ошибки
+ * \a m_errText - описание ошибки
+ *
+ * Если же процесс завершился успешно, ответ помещается в \a m_response.
+ */
+void TFRequest::parseResponse() {
+
+    m_errCode = m_tf->error();
+    switch( m_errCode ) {
+        case QProcess::UnknownError : break;
+        case QProcess::FailedToStart: m_isErr = true; m_errText = tr("Не удалось запустить программу TF"); return;
+        default                     : m_isErr = true; m_errText = m_tf->errorString();                     return;
+    }
+
+    m_errCode = m_tf->exitCode();
+    if( m_errCode != 0 ) {
+        m_isErr   = true;
+        m_errText = m_codec->toUnicode(m_tf->readAllStandardError());
+        return;
+    }
+
+    m_response = m_codec->toUnicode(m_tf->readAllStandardOutput()).split("\n", Qt::SkipEmptyParts);
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Изменение синхронного/асинхронного режима
+ * \param isAsync Признак асинхронности
+ *
+ * Если isAsync == TRUE, после выполнения запроса испускается сигнал \a executed().
+ */
+void TFRequest::setAsync( bool isAsync ) {
+
+    m_isAsync = isAsync;
+    m_tf->blockSignals( !m_isAsync );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Изменение конфигурации
+ * \param cfg Новая конфигурация
+ */
 void TFRequest::setConfig( const Config& cfg ) {
 
     m_config = cfg;
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Очистка
+ */
 void TFRequest::clear() {
 
     m_isErr   = false;
