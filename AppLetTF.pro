@@ -7,7 +7,8 @@ INCLUDEPATH += src            \
                src/config     \
                src/settings
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    src/settings/SettingsDialog_common.cpp
 
 HEADERS += src/AppLetTF.h                \
            src/common.h                  \

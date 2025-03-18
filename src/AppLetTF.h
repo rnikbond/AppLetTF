@@ -3,6 +3,7 @@
 #define APPLETTF_H
 //----------------------------------------
 #include <QMainWindow>
+#include <QSystemTrayIcon>
 //----------------------------------------
 #include "Config.h"
 #include "TFRequest.h"
@@ -25,10 +26,22 @@ private: // Config
 
     Config m_config;
 
+    void changeSettings();
+
 private: // TF
 
     TFRequest* m_tf;
     void reactOnCmdExecuted();
+
+private: // Tray
+
+    bool     m_tray_message;
+    QMenu  * m_trayMenu  ;
+    QAction* m_quitAction;
+    QSystemTrayIcon* m_tray;
+
+    void setupTray();
+    void reactOnTray( QSystemTrayIcon::ActivationReason reason );
 
 private: // UI
 
@@ -36,6 +49,10 @@ private: // UI
 
     void setupUI();
     void moveToCenterScreen();
+
+protected:
+
+    void closeEvent( QCloseEvent* event );
 };
 //----------------------------------------------------------------------------------------------------------
 

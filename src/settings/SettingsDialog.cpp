@@ -6,7 +6,8 @@
 //----------------------------------------
 
 enum Pages {
-    PageTFS      , ///< Конфигурация TFS
+    PageCommon, ///< Страница: Общее
+    PageAzure , ///< Страница: Azure DevOps Server
 };
 //----------------------------------------
 enum {
@@ -34,13 +35,15 @@ SettingsDialog::~SettingsDialog() {
 
 void SettingsDialog::save() {
 
-    saveConfigPageAzure();
+    saveConfigPageCommon();
+    saveConfigPageAzure ();
 }
 //----------------------------------------------------------------------------------------------------------
 
 void SettingsDialog::restore() {
 
-    restoreConfigPageAzure();
+    restoreConfigPageCommon();
+    restoreConfigPageAzure ();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -49,7 +52,7 @@ void SettingsDialog::setConfig( const Config& cfg ) {
     m_config = cfg;
     restore();
 
-    ui->pagesList->setCurrentItem( findPage(PageTFS) );
+    ui->pagesList->setCurrentItem( findPage(PageAzure) );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -79,8 +82,12 @@ void SettingsDialog::selectPage( QListWidgetItem* itemPage, QListWidgetItem* ) {
 
     int page = itemPage->data(PageRole).toInt();
     switch( page) {
-        case PageTFS: {
-            ui->pagesStack->setCurrentWidget( ui->pageConfigTFS );
+        case PageCommon: {
+        ui->pagesStack->setCurrentWidget( ui->commonPage );
+            break;
+        }
+        case PageAzure: {
+            ui->pagesStack->setCurrentWidget( ui->azurePage );
             break;
         }
         default: {
@@ -93,13 +100,19 @@ void SettingsDialog::selectPage( QListWidgetItem* itemPage, QListWidgetItem* ) {
 
 void SettingsDialog::initPages() {
 
-    QListWidgetItem* itemPageTFS = new QListWidgetItem;
+    QListWidgetItem* itemCommon = new QListWidgetItem;
+    QListWidgetItem* itemAzure = new QListWidgetItem;
 
-    itemPageTFS->setText( tr("Конфигурация TFS") );
-    itemPageTFS->setData( PageRole, PageTFS      );
+    itemCommon->setText( tr("Общее")               );
+    itemAzure ->setText( tr("Azure DevOps Server") );
 
-    ui->pagesList->addItem( itemPageTFS );
+    itemCommon->setData( PageRole, PageCommon );
+    itemAzure ->setData( PageRole, PageAzure  );
 
+    ui->pagesList->addItem( itemCommon );
+    ui->pagesList->addItem( itemAzure  );
+
+    initPageCommon();
     initPageAzure();
 
     connect( ui->pagesList, &QListWidget::currentItemChanged, this, &SettingsDialog::selectPage );

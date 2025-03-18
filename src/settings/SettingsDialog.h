@@ -40,6 +40,12 @@ private: // Pages
     void selectPage( QListWidgetItem* itemPage, QListWidgetItem* );
     QListWidgetItem* findPage( int page ) const;
 
+private: // Page Common
+
+    void initPageCommon         ();
+    void saveConfigPageCommon   ();
+    void restoreConfigPageCommon();
+
 private: // Page Azure
 
     void initPageAzure         ();

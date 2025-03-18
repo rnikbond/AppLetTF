@@ -32,6 +32,7 @@ public:
     QString m_path;
 
     QRect       m_geometry;
+    bool        m_tray;
     AzureDevOps m_azure;
 
 public:

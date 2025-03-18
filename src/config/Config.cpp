@@ -10,19 +10,22 @@
 #define CONF_VERSION 1
 #define CONF_PROP_VERSION "version"
 
+#define CONF_GROUP_COMMON "common"
+    #define CONF_PROP_TRAY "tray"
+
 #define CONF_GROUP_GEOMETRY "geometry"
-#define CONF_PROP_GEOMETRY_X "x"
-#define CONF_PROP_GEOMETRY_Y "y"
-#define CONF_PROP_GEOMETRY_WIDTH  "width"
-#define CONF_PROP_GEOMETRY_HEIGHT "height"
+    #define CONF_PROP_GEOMETRY_X "x"
+    #define CONF_PROP_GEOMETRY_Y "y"
+    #define CONF_PROP_GEOMETRY_WIDTH  "width"
+    #define CONF_PROP_GEOMETRY_HEIGHT "height"
 
 #define CONF_GROUP_AZURE "tfs"
-#define CONF_PROP_TF_PATH         "tf_path"
-#define CONF_PROP_DIFF_CMD        "diff_command"
-#define CONF_PROP_AZURE_URL       "url"
-#define CONF_PROP_AZURE_WORKSPACE "workspace"
-#define CONF_PROP_AZURE_LOGIN     "login"
-#define CONF_PROP_AZURE_PASSWORD  "password"
+    #define CONF_PROP_TF_PATH         "tf_path"
+    #define CONF_PROP_DIFF_CMD        "diff_command"
+    #define CONF_PROP_AZURE_URL       "url"
+    #define CONF_PROP_AZURE_WORKSPACE "workspace"
+    #define CONF_PROP_AZURE_LOGIN     "login"
+    #define CONF_PROP_AZURE_PASSWORD  "password"
 //----------------------------------------
 
 Config::Config() { }
@@ -31,6 +34,7 @@ Config::Config() { }
 Config::Config( const Config& other ) {
 
     m_path = other.m_path;
+    m_tray = other.m_tray;
 
     m_azure.tfPath     = other.m_azure.tfPath    ;
     m_azure.diffCmd    = other.m_azure.diffCmd   ;
@@ -73,6 +77,10 @@ void Config::save( QRect geometry ) {
     conf.setValue( CONF_PROP_AZURE_PASSWORD , m_azure.password  );
     conf.endGroup();
 
+    conf.beginGroup( CONF_GROUP_COMMON );
+    conf.setValue( CONF_PROP_TRAY, m_tray );
+    conf.endGroup();
+
     if( geometry.isValid() ) {
         conf.beginGroup( CONF_GROUP_GEOMETRY );
         conf.setValue( CONF_PROP_GEOMETRY_X      , geometry.x()      );
@@ -104,6 +112,10 @@ void Config::restore() {
             return;
         }
     }
+
+    conf.beginGroup( CONF_GROUP_COMMON );
+    m_tray = conf.value( CONF_PROP_TRAY, false ).toBool();
+    conf.endGroup();
 
     conf.beginGroup( CONF_GROUP_GEOMETRY );
     m_geometry.setX     ( conf.value(CONF_PROP_GEOMETRY_X     , -1).toInt() );
@@ -143,6 +155,7 @@ bool Config::isIncomplete() const {
 void Config::operator = ( const Config& other ) {
 
     m_path = other.m_path;
+    m_tray = other.m_tray;
 
     m_azure.tfPath     = other.m_azure.tfPath    ;
     m_azure.diffCmd    = other.m_azure.diffCmd   ;

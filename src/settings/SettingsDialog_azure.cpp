@@ -188,7 +188,7 @@ bool SettingsDialog::initAzureWorkspace( const QList<Workspace>& workspacesAzure
 //----------------------------------------------------------------------------------------------------------
 
 /*!
- * \brief Сохранение конфигурации
+ * \brief Сохранение конфигурации страницы "Azure DevOps Server"
  */
 void SettingsDialog::saveConfigPageAzure() {
 
@@ -201,7 +201,7 @@ void SettingsDialog::saveConfigPageAzure() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
- * \brief Восстановление конфигурации
+ * \brief Восстановление конфигурации страницы "Azure DevOps Server"
  */
 void SettingsDialog::restoreConfigPageAzure() {
 
@@ -213,6 +213,9 @@ void SettingsDialog::restoreConfigPageAzure() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Инициализация страницы "Azure DevOps Server"
+ */
 void SettingsDialog::initPageAzure() {
 
     ui->tfPathEdit  ->setPlaceholderText( EXAMPLE_TF_BIN );

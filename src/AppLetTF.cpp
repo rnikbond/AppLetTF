@@ -1,6 +1,8 @@
 //----------------------------------------
+#include <QMenu>
 #include <QDebug>
 #include <QScreen>
+#include <QCloseEvent>
 //----------------------------------------
 #include "methods.h"
 #include "SettingsDialog.h"
@@ -12,7 +14,8 @@
 AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF)
 {
     ui->setupUi(this);
-    setupUI();
+    setupUI  ();
+    setupTray();
 
     m_tf = new TFRequest( this );
     m_tf->setAsync( true );
@@ -20,7 +23,7 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     connect( m_tf, &TFRequest::executed, this, &AppLetTF::reactOnCmdExecuted );
 
     connect( ui->pushButton, &QPushButton::clicked, [this]{
-        m_tf->workspaces();
+        changeSettings();
     } );
 }
 //----------------------------------------------------------------------------------------------------------
@@ -53,6 +56,30 @@ void AppLetTF::reactOnCmdExecuted() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+void AppLetTF::reactOnTray( QSystemTrayIcon::ActivationReason reason ) {
+
+    Q_UNUSED( reason );
+
+    switch (reason){
+        case QSystemTrayIcon::Trigger:setVisible( !isVisible() ); break;
+        default: break;
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::changeSettings() {
+
+    SettingsDialog settings;
+    settings.setConfig( m_config );
+    if( settings.exec() != QDialog::Accepted ) {
+        return;
+    }
+
+    m_config = settings.config();
+    m_config.save( geometry() );
+}
+//----------------------------------------------------------------------------------------------------------
+
 void AppLetTF::init() {
 
     QString cfgPath;
@@ -74,16 +101,28 @@ void AppLetTF::init() {
     m_config.restore();
 
     if( !m_config.isIncomplete() ) {
-
-        SettingsDialog settings;
-        settings.setConfig( m_config );
-        if( settings.exec() == QDialog::Accepted ) {
-            m_config = settings.config();
-            m_config.save( geometry() );
-        }
+        changeSettings();
     }
 
     m_tf->setConfig( m_config );
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::setupTray() {
+
+    m_tray_message = true;
+    m_trayMenu     = new QMenu(this);
+    m_quitAction   = new QAction( QIcon(":/exit.png"), tr("Закрыть"), this);
+    m_trayMenu->addAction( m_quitAction );
+    connect( m_quitAction, &QAction::triggered, qApp, &QApplication::quit );
+
+    m_tray = new QSystemTrayIcon( this );
+    m_tray->setIcon( QIcon(":/branch_vsc.png") );
+    m_tray->setToolTip("AppLet TF");
+    m_tray->setContextMenu( m_trayMenu );
+    m_tray->show();
+
+    connect( m_tray, &QSystemTrayIcon::activated, this, &AppLetTF::reactOnTray );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -91,6 +130,26 @@ void AppLetTF::setupUI() {
 
     setWindowTitle( tr("AppLet TF") );
     moveToCenterScreen();
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::closeEvent( QCloseEvent* event ) {
+
+    m_config.save( geometry() );
+
+    if( !m_config.m_tray ) {
+        QMainWindow::closeEvent( event );
+        return;
+    }
+
+    event->ignore();
+    hide();
+
+    if( m_tray_message ) {
+        QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon(QSystemTrayIcon::Information);
+        m_tray->showMessage("AppLet TF", tr("Приложение свернуто в трей"), icon, 2000 );
+        m_tray_message = false;
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
