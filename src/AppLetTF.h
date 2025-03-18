@@ -31,6 +31,8 @@ private: // Config
 private: // TF
 
     TFRequest* m_tf;
+
+    void setupTF();
     void reactOnCmdExecuted();
 
 private: // Tray

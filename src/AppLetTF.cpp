@@ -13,14 +13,9 @@
 
 AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF)
 {
-    ui->setupUi(this);
     setupUI  ();
     setupTray();
-
-    m_tf = new TFRequest( this );
-    m_tf->setAsync( true );
-
-    connect( m_tf, &TFRequest::executed, this, &AppLetTF::reactOnCmdExecuted );
+    setupTF  ();
 
     connect( ui->pushButton, &QPushButton::clicked, [this]{
         changeSettings();
@@ -34,6 +29,9 @@ AppLetTF::~AppLetTF() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Обработка выполненой команды TF
+ */
 void AppLetTF::reactOnCmdExecuted() {
 
     if( m_tf->m_isErr ) {
@@ -56,6 +54,10 @@ void AppLetTF::reactOnCmdExecuted() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Обработка клика по иконке в трее
+ * \param reason Не используется
+ */
 void AppLetTF::reactOnTray( QSystemTrayIcon::ActivationReason reason ) {
 
     Q_UNUSED( reason );
@@ -67,6 +69,11 @@ void AppLetTF::reactOnTray( QSystemTrayIcon::ActivationReason reason ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Изменение настроек
+ *
+ * Если в окне настроек нажата кнопка "ОК", конфигурация будет сохранена.
+ */
 void AppLetTF::changeSettings() {
 
     SettingsDialog settings;
@@ -80,6 +87,16 @@ void AppLetTF::changeSettings() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Инициализация
+ *
+ * При инициализации считывается аргмент командной строки, в котором указан путь к файлу конфигурации:
+ * -c=/home/user/applettf.cfg
+ * --config=/home/user/applettf.cfg
+ *
+ * Если такого аргемента нет, используется путь к файлу конфигурации по-умолчанию: "applettf.cfg"
+ * Если нет файла конфигурации или в конфигурации есть ошибки, вызывается окно для настройки конфигурации.
+ */
 void AppLetTF::init() {
 
     QString cfgPath;
@@ -105,9 +122,28 @@ void AppLetTF::init() {
     }
 
     m_tf->setConfig( m_config );
+
+    if( m_config.m_geometry.isValid() ) {
+        setGeometry( m_config.m_geometry );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка инструмента для работы с программой TF
+ */
+void AppLetTF::setupTF() {
+
+    m_tf = new TFRequest( this );
+    m_tf->setAsync( true );
+
+    connect( m_tf, &TFRequest::executed, this, &AppLetTF::reactOnCmdExecuted );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Настройка инструментов для работы в трее
+ */
 void AppLetTF::setupTray() {
 
     m_tray_message = true;
@@ -126,13 +162,24 @@ void AppLetTF::setupTray() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка интерфейса окна
+ */
 void AppLetTF::setupUI() {
+
+    ui->setupUi( this );
 
     setWindowTitle( tr("AppLet TF") );
     moveToCenterScreen();
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Обработка события закрытия окна
+ * \param event Событие
+ *
+ * Если установлен признак сворачивания в трей, событие игнорируется и приложение сворачивается в трей.
+ */
 void AppLetTF::closeEvent( QCloseEvent* event ) {
 
     m_config.save( geometry() );
@@ -153,6 +200,9 @@ void AppLetTF::closeEvent( QCloseEvent* event ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Перемещение окна в центр экрана
+ */
 void AppLetTF::moveToCenterScreen() {
 
     QRect rect  = QGuiApplication::primaryScreen()->geometry();
