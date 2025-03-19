@@ -67,6 +67,11 @@ void AzureTreeDialog::expand( QTreeWidgetItem* item ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Создание дочерних элементов
+ * \param parent Указатель на родительский элемент
+ * \param entries Список элементов, которые нужно создать
+ */
 void AzureTreeDialog::createTreeItems( QTreeWidgetItem* parent, const QList<AzureItem>& entries ) {
 
     QList<QTreeWidgetItem*> items;

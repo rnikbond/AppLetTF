@@ -123,6 +123,9 @@ void AppLetTF::init() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка действий
+ */
 void AppLetTF::setupActions() {
 
     m_settingsAction = new QAction( tr("Настройки") );
@@ -238,6 +241,13 @@ void AppLetTF::closeEvent( QCloseEvent* event ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Вывод инфомарции
+ * \param isErr    Признак ошибки
+ * \param code     Код ошибки
+ * \param err      Текст ошибки
+ * \param response Список значений из ответа, если нет ошибки
+ */
 void AppLetTF::appendOutput( bool isErr, int code, const QString& err, const QStringList& response ) {
 
     ui->logEdit->append("");

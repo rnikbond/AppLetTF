@@ -43,6 +43,11 @@ HistoryDetailWidget::~HistoryDetailWidget() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Перезагрузка детальной информации о наборе изменений
+ * \param path Путь к файлу или каталогу, изменения которого нужно перезагрузить
+ * \param version Набор изменений (версия), информацию о которого нужно отобразить
+ */
 void HistoryDetailWidget::reload( const QString& path, const QString& version ) {
 
     m_path    = path;
@@ -132,6 +137,9 @@ void HistoryDetailWidget::reload( const QString& path, const QString& version ) 
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Сравнение выбранного файла с предыдущей версией
+ */
 void HistoryDetailWidget::diff() {
 
     int row = ui->filesTable->currentRow();
@@ -167,12 +175,19 @@ void HistoryDetailWidget::diff() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение контекстного меню
+ * \param pos Позиция для отображения
+ */
 void HistoryDetailWidget::showCtxMenu( const QPoint& pos ) {
 
     m_ctxMenu->popup( ui->filesTable->viewport()->mapToGlobal(pos) );
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка действий
+ */
 void HistoryDetailWidget::setupActions() {
 
     m_diffAction = new QAction( QIcon(":/compare_files.png"), tr("Сравнить с предыдущей версией") );
@@ -180,6 +195,9 @@ void HistoryDetailWidget::setupActions() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка контекстного меню
+ */
 void HistoryDetailWidget::setupCtxMenu() {
 
     m_ctxMenu = new QMenu( this );
@@ -187,6 +205,10 @@ void HistoryDetailWidget::setupCtxMenu() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Изменение конфигурации
+ * \param cfg Новая конфигурация
+ */
 void HistoryDetailWidget::setConfig( const Config& cfg ) {
 
     m_config = cfg;

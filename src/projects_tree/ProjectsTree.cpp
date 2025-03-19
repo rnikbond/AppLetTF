@@ -42,6 +42,9 @@ ProjectsTree::~ProjectsTree() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение журнала изменений выбранного элемента
+ */
 void ProjectsTree::history() {
 
     QTreeWidgetItem* item = ui->projectsTree->currentItem();
@@ -59,6 +62,9 @@ void ProjectsTree::history() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Клонирование последней версии выбранного элемента дерева
+ */
 void ProjectsTree::cloneLasted() {
 
     QTreeWidgetItem* item = ui->projectsTree->currentItem();
@@ -75,6 +81,9 @@ void ProjectsTree::cloneLasted() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Клонирование определенной версии выбранного элемента дерева
+ */
 void ProjectsTree::cloneCertain() {
 
     QTreeWidgetItem* item = ui->projectsTree->currentItem();
@@ -278,6 +287,10 @@ void ProjectsTree::createTreeItems( QTreeWidgetItem* parent, const QList<AzureIt
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Установка фокуса на элемент дерева
+ * \param path Путь к каталогу
+ */
 void ProjectsTree::setCurrentProject( const QString& path ) {
 
     QTreeWidgetItem* item = m_treeItems[path];
@@ -293,6 +306,13 @@ void ProjectsTree::setCurrentProject( const QString& path ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Получение вкладки журнала изменений
+ * \param path Путь к элементу, информация о которого должна отобразиться
+ * \return Указатель на вкладку
+ *
+ * Если вкладки по путь \a path ранее не было, она будет создана.
+ */
 HistoryWidget* ProjectsTree::historyTab( const QString& path ) {
 
     // Поиск уже созданной вкладки журнала
@@ -316,6 +336,10 @@ HistoryWidget* ProjectsTree::historyTab( const QString& path ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Закрытие вкладки журнала изменений
+ * \param index Номер вкладки
+ */
 void ProjectsTree::closeHistoryTab( int index ) {
 
     QWidget* widet = ui->historyTab->widget( index );
@@ -328,20 +352,30 @@ void ProjectsTree::closeHistoryTab( int index ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение контекстного меню
+ * \param pos Позиция для отображения
+ */
 void ProjectsTree::showCtxMenu( const QPoint& pos ) {
 
     m_ctxMenu->popup( ui->projectsTree->viewport()->mapToGlobal(pos) );
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Изменение конфигурации
+ * \param cfg Новая конфигурация
+ */
 void ProjectsTree::setConfig( const Config& cfg ) {
 
     m_config = cfg;
-
     reload();
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка действий
+ */
 void ProjectsTree::setupActions() {
 
     m_cloneLastedAction  = new QAction( QIcon(":/save.png"   ), tr("Получить последнюю версию"   ) );
@@ -356,6 +390,9 @@ void ProjectsTree::setupActions() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка контекстного меню
+ */
 void ProjectsTree::setupCtxMenu() {
 
     m_ctxMenu = new QMenu( this );

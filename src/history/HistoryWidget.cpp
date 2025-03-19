@@ -50,6 +50,9 @@ HistoryWidget::~HistoryWidget() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение детальной информации о наборе изменений
+ */
 void HistoryWidget::showDetail() {
 
     int row = ui->historyTable->currentRow();
@@ -66,11 +69,19 @@ void HistoryWidget::showDetail() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Перезагрузка журнала изменений
+ * \param path Путь к файлу или каталогу, журнал изменений которого нужно отобразить
+ *
+ * Пример \a path:
+ * $/Proj/subproj
+ * $/Proj/subproj/file.txt
+ */
 void HistoryWidget::reload( const QString& path ) {
 
     m_path = path;
 
-    ui->pathLabel->setText( tr("Исходный путь: <a href=\"%1\">%1</u>").arg(path) );
+    ui->pathLabel->setText( tr("Исходное расположение: <a href=\"%1\">%1</u>").arg(path) );
     ui->historyTable->setRowCount( 0 );
 
     TFRequest tf;
@@ -108,17 +119,28 @@ void HistoryWidget::reload( const QString& path ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Получение пути, для которого отображается журнал изменений
+ * \return Путь
+ */
 QString HistoryWidget::path() const {
     return m_path;
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение контекстного меню
+ * \param pos Позиция для отображения меню
+ */
 void HistoryWidget::showCtxMenu( const QPoint& pos ) {
 
     m_ctxMenu->popup( ui->historyTable->viewport()->mapToGlobal(pos) );
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка действий
+ */
 void HistoryWidget::setupActions() {
 
     m_detailAction = new QAction( QIcon(""), tr("Посмотреть детали") );
@@ -126,6 +148,9 @@ void HistoryWidget::setupActions() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка контекстного меню
+ */
 void HistoryWidget::setupCtxMenu() {
 
     m_ctxMenu = new QMenu( this );
@@ -133,6 +158,10 @@ void HistoryWidget::setupCtxMenu() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Изменение конфигурации
+ * \param cfg Новая конфигурация
+ */
 void HistoryWidget::setConfig( const Config& cfg ) {
 
     m_config = cfg;

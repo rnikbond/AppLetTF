@@ -33,6 +33,9 @@ SettingsDialog::~SettingsDialog() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Сохранение настроек
+ */
 void SettingsDialog::save() {
 
     saveConfigPageCommon();
@@ -40,6 +43,9 @@ void SettingsDialog::save() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Восстановление настроек
+ */
 void SettingsDialog::restore() {
 
     restoreConfigPageCommon();
@@ -47,6 +53,10 @@ void SettingsDialog::restore() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Изменение конфигурации
+ * \param cfg Новая конфигурация
+ */
 void SettingsDialog::setConfig( const Config& cfg ) {
 
     m_config = cfg;
@@ -56,11 +66,20 @@ void SettingsDialog::setConfig( const Config& cfg ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Получение конфигурации
+ * \return Настроенная конфигурация
+ */
 const Config& SettingsDialog::config() const {
     return m_config;
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Поиск страницы
+ * \param page Номер страницы
+ * \return Указатель на элемент списка, соответствующий странице
+ */
 QListWidgetItem* SettingsDialog::findPage( int page ) const {
 
     for( int row = 0; row < ui->pagesList->count(); row++ ) {
@@ -74,6 +93,10 @@ QListWidgetItem* SettingsDialog::findPage( int page ) const {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Выбор страницы
+ * \param itemPage Указатель на элемент списка, соответствующий странице
+ */
 void SettingsDialog::selectPage( QListWidgetItem* itemPage, QListWidgetItem* ) {
 
     if( itemPage == nullptr ) {
@@ -98,6 +121,9 @@ void SettingsDialog::selectPage( QListWidgetItem* itemPage, QListWidgetItem* ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Инициализация страниц
+ */
 void SettingsDialog::initPages() {
 
     QListWidgetItem* itemCommon = new QListWidgetItem;
