@@ -47,7 +47,7 @@ public: // Requests
     void checkConnection();
 
     void workspaces();
-    void createWorkspace( const QString& name );
+    void createWorkspace( const QString& name, const QString& comment );
     void removeWorkspace( const QString& name );
 
     void workfolds( const QString& workspace = "" );

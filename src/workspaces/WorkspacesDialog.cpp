@@ -108,10 +108,11 @@ void WorkspacesDialog::createWorkspace() {
     QString name      = dialog.name();
     QString azurePath = dialog.azureFolderPath();
     QString localPath = dialog.localFolderPath();
+    QString comment   = dialog.comment();
 
     TFRequest tf;
     tf.setConfig( m_config );
-    tf.createWorkspace( name );
+    tf.createWorkspace( name, comment );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
@@ -261,6 +262,8 @@ void WorkspacesDialog::setConfig( const Config& cfg ) {
 void WorkspacesDialog::setupUI() {
 
     ui->setupUi( this );
+
+    setWindowTitle( tr("Выбор рабочей области") );
 
     ui->workspacesTable->setSelectionMode    ( QAbstractItemView::SingleSelection );
     ui->workspacesTable->setSelectionBehavior( QAbstractItemView::SelectRows      );

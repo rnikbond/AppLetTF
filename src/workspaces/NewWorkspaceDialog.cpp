@@ -49,6 +49,15 @@ QString NewWorkspaceDialog::localFolderPath() const {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Получение примечания
+ * \return Примечание
+ */
+QString NewWorkspaceDialog::comment() const {
+    return ui->commentEdit->text();
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Выбора каталога Azure
  */
 void NewWorkspaceDialog::selectAzureFolder() {

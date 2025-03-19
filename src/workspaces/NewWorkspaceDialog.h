@@ -25,6 +25,7 @@ public:
     QString name() const;
     QString azureFolderPath() const;
     QString localFolderPath() const;
+    QString comment() const;
 
 private:
 

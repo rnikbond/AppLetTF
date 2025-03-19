@@ -77,12 +77,13 @@ void TFRequest::workspaces() {
  * \brief Создание новой рабочей области
  * \param name Имя рабочей области
  */
-void TFRequest::createWorkspace( const QString& name ) {
+void TFRequest::createWorkspace(const QString& name , const QString &comment ) {
 
     QStringList args = {
         "workspace",
         "-new",
         name,
+        QString("-comment:%1").arg(comment),
         QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
         QString("-collection:%1").arg(m_config.m_azure.url),
         "-noprompt"
