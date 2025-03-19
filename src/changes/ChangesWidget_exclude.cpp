@@ -12,6 +12,9 @@
 #include "ui_ChangesWidget.h"
 //----------------------------------------
 
+/*!
+ * \brief Перезагрузка дерева исключенных изменений
+ */
 void ChangesWidget::reloadExcluded() {
 
     ui->excludedTree->blockSignals( true );
@@ -33,6 +36,10 @@ void ChangesWidget::reloadExcluded() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Добавление файла в дерево исключенных
+ * \param path Путь к файлу
+ */
 void ChangesWidget::addExcludedFileItem( const QString& path ) {
 
     m_excluded.append( path );
@@ -47,6 +54,11 @@ void ChangesWidget::addExcludedFileItem( const QString& path ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Создание элемента в дереве исключенных изменений
+ * \param file Имя файла
+ * \param path Полный путь к элемента
+ */
 void ChangesWidget::createExcludedFileItem( const QString& file, const QString& path ) {
 
     QString dir = QString(path).remove(file);
@@ -76,6 +88,9 @@ void ChangesWidget::createExcludedFileItem( const QString& file, const QString& 
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка части исключенных изменений
+ */
 void ChangesWidget::setupExcluded() {
 
     m_reloadExcludedButton = new QToolButton( this );

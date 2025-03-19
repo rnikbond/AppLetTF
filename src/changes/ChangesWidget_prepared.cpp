@@ -12,6 +12,9 @@
 #include "ui_ChangesWidget.h"
 //----------------------------------------
 
+/*!
+ * \brief Фиксация изменений
+ */
 void ChangesWidget::reactOnCommit() {
 
     QString     comment = ui->commentEdit->toPlainText();
@@ -50,6 +53,9 @@ void ChangesWidget::reactOnCommit() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Сравнение подготовленных (ожидающих) изменений
+ */
 void ChangesWidget::reactOnPreparedDiff() {
 
     QTreeWidgetItem* item = ui->preparedTree->currentItem();
@@ -71,6 +77,9 @@ void ChangesWidget::reactOnPreparedDiff() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отмена подготовленных (ожидающих) изменений
+ */
 void ChangesWidget::reactOnPreparedCancel() {
 
     QStringList undoPathes;
@@ -109,6 +118,9 @@ void ChangesWidget::reactOnPreparedCancel() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Исключение подготовленных (ожидающих) изменений
+ */
 void ChangesWidget::reactOnPreparedExclude() {
 
     QStringList             pathes;
@@ -141,6 +153,10 @@ void ChangesWidget::reactOnPreparedExclude() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Обработка изменения состояния элемента в дереве подготовленных изменений
+ * \param item Измененный элемент
+ */
 void ChangesWidget::reactOnPreparedItemChanged( QTreeWidgetItem* item, int ) {
 
     ui->preparedTree->blockSignals( true );
@@ -168,12 +184,19 @@ void ChangesWidget::reactOnPreparedItemChanged( QTreeWidgetItem* item, int ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение контекстного меню в дереве подготовленных (ожидающих) изменений
+ * \param pos Позиция для отображения
+ */
 void ChangesWidget::reactOnPreparedMenuRequested( const QPoint& pos ) {
 
     m_preparedCtxMenu->popup( ui->preparedTree->viewport()->mapToGlobal(pos) );
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Перезагрузка дерева подготовленных (ожидающих) изменений
+ */
 void ChangesWidget::reloadPrepared() {
 
     ui->commentEdit->clear();
@@ -258,6 +281,12 @@ void ChangesWidget::reloadPrepared() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Создание элемента в дереве подготовленных (ожидающих) изменений
+ * \param file Имя файла
+ * \param path Полный путь к элемента
+ * \param status Состояние элемента
+ */
 void ChangesWidget::createPreparedFileItem( const QString& file, const QString& path, int status ) {
 
     QString dir = QString(path).remove(file);
@@ -297,6 +326,9 @@ void ChangesWidget::createPreparedFileItem( const QString& file, const QString& 
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Обновление размера поля для ввода комментария
+ */
 void ChangesWidget::updateCommitSize() {
 
    auto textHeight = ui->commentEdit->document()->documentLayout()->documentSize().height();
@@ -304,6 +336,9 @@ void ChangesWidget::updateCommitSize() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка части подготовленных (ожидающих) изменений
+ */
 void ChangesWidget::setupPrepared() {
 
     m_reloadPreparedButton = new QToolButton( this );

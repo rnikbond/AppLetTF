@@ -11,6 +11,9 @@
 #include "ui_ChangesWidget.h"
 //----------------------------------------
 
+/*!
+ * \brief Обработка применения обнаруженных изменений
+ */
 void ChangesWidget::reactOnDetectedApply() {
 
     QTreeWidgetItem* item = ui->detectedTree->currentItem();
@@ -39,12 +42,19 @@ void ChangesWidget::reactOnDetectedApply() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Отображение контекстного меню в дереве обнаруженных изменений
+ * \param pos Позиция для отображения
+ */
 void ChangesWidget::reactOnDetectedMenuRequested( const QPoint& pos ) {
 
     m_detectedCtxMenu->popup( ui->detectedTree->viewport()->mapToGlobal(pos) );
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Перезагрузка дерева обнаруженных изменений
+ */
 void ChangesWidget::reloadDetected() {
 
     QStringList detectedChanges;
@@ -119,6 +129,12 @@ void ChangesWidget::reloadDetected() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Создание эдемента в дереве обнаруженных изменений
+ * \param file Имя файла
+ * \param path Полный путь к элемента
+ * \param status Состояние элемента
+ */
 void ChangesWidget::createDetectedFileItem( const QString& file, const QString& path, int status ) {
 
     QString dir = QString(path).remove(file);
@@ -156,6 +172,9 @@ void ChangesWidget::createDetectedFileItem( const QString& file, const QString& 
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Настройка части обнаруженных изменений
+ */
 void ChangesWidget::setupDetected() {
 
     m_reloadDetectedButton = new QToolButton( this );
