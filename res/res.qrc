@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>folder.png</file>
+        <file>branch_vsc.png</file>
+    </qresource>
+</RCC>

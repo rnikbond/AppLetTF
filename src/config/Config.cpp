@@ -1,7 +1,10 @@
 //----------------------------------------
+#include <QDir>
 #include <QFile>
 #include <QRect>
 #include <QSettings>
+//----------------------------------------
+#include "methods.h"
 //----------------------------------------
 #include "Config.h"
 //----------------------------------------
@@ -54,7 +57,7 @@ Config::Config( const Config& other ) {
  */
 void Config::init( const QString& path ) {
 
-    m_path = path.isEmpty() ? CONF_DEFAULT_PATH : path ;
+    m_path = path.isEmpty() ? QString("%1/%2").arg(workDirPath(), CONF_DEFAULT_PATH) : path ;
 }
 //----------------------------------------------------------------------------------------------------------
 

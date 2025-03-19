@@ -35,6 +35,10 @@ private: // TF
     void setupTF();
     void reactOnCmdExecuted();
 
+private: // Log
+
+    void appendOutput( bool isErr, int code, const QString& err, const QStringList& response );
+
 private: // Tray
 
     bool     m_tray_message;
@@ -44,6 +48,12 @@ private: // Tray
 
     void setupTray();
     void reactOnTray( QSystemTrayIcon::ActivationReason reason );
+
+private: // Actions
+
+    QAction* m_settingsAction;
+
+    void setupActions();
 
 private: // UI
 

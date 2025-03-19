@@ -1,7 +1,10 @@
 //----------------------------------------
+#include <QDir>
 #include <QDebug>
 #include <QTextCodec>
 #include <QApplication>
+//----------------------------------------
+#include "methods.h"
 //----------------------------------------
 #include "TFRequest.h"
 //----------------------------------------
@@ -17,6 +20,7 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
     m_isTouchCursor = true;
 
     m_tf = new QProcess( this );
+    m_tf->setWorkingDirectory( workDirPath() );
 
     clear();
     setAsync( false );
@@ -85,6 +89,195 @@ void TFRequest::createWorkspace( const QString& name ) {
         QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
         QString("-collection:%1").arg(m_config.m_azure.url),
         "-noprompt"
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение содержимого каталога
+ * \param dir Каталог, у которого нужно получить содержимое
+ */
+void TFRequest::entriesDir( const QString& dir ) {
+
+    clear();
+
+    QStringList args = { "dir",
+                        QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+                        QString("-collection:%1").arg(m_config.m_azure.url),
+                        dir };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение журнала изменений
+ * \param path Путь к элементу, у которого нужно получить журнал изменений
+ */
+void TFRequest::history( const QString& path ) {
+
+    clear();
+
+    // tf hist[ory]                         -
+    // itemspec                             -
+    // -version:versionspec                 -
+    // -stopafter:number]                   -
+    // -recursive                           -
+    // -user:username                       -
+    // -format:(brief|detailed)             -
+    // -slotmode                            -
+    // -itemmode                            -
+    // -noprompt                            -
+    // -login:username,password             -
+    // -sort:ascending|descending           -
+    // -collection:TeamProjectCollectionUrl -
+
+    QStringList args = {
+        "history",
+        "-recursive",
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        "-noprompt",
+        path
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение детальной информации о наборе изменений
+ * \param path Путь к элементу, у которого нужно получить журнал изменений
+ * \param version Набор изменений (версия)
+ */
+void TFRequest::historyCertain( const QString& path, const QString& version ) {
+
+    clear();
+
+    // tf hist[ory]                         -
+    // itemspec                             -
+    // -version:versionspec                 -
+    // -stopafter:number]                   -
+    // -recursive                           -
+    // -user:username                       -
+    // -format:(brief|detailed)             -
+    // -slotmode                            -
+    // -itemmode                            -
+    // -noprompt                            -
+    // -login:username,password             -
+    // -sort:ascending|descending           -
+    // -collection:TeamProjectCollectionUrl -
+
+    QStringList args = {
+        "history",
+        path,
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        QString("-version:C%1").arg(version),
+        "-format:detailed",
+        "-recursive",
+        "-stopafter:1",
+        "-slotmode",
+        "-noprompt",
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение предыдущей версии относительно выбранной версии
+ * \param path Путь к элементу, который нужно сравнить
+ * \param version Наборе изменений (версия), относительно которого нужно получить предыдущий набор
+ */
+void TFRequest::historyDiffPrev( const QString& path, const QString& version ) {
+
+    clear();
+
+    // tf hist[ory]                         -
+    // itemspec                             -
+    // -version:versionspec                 -
+    // -stopafter:number]                   -
+    // -recursive                           -
+    // -user:username                       -
+    // -format:(brief|detailed)             -
+    // -slotmode                            -
+    // -itemmode                            -
+    // -noprompt                            -
+    // -login:username,password             -
+    // -sort:ascending|descending           -
+    // -collection:TeamProjectCollectionUrl -
+
+    QStringList args = {
+        "history",
+        path,
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        QString("-version:C%1").arg(version),
+        "-format:brief",
+        "-recursive",
+        "-stopafter:2",
+        "-noprompt",
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Сравнение файла на сервере с локальной версией
+ * \param file Файл, который нужно сравнить
+ */
+void TFRequest::difference( const QString& file ) {
+
+    clear();
+
+    QStringList args = {
+        "diff",
+        file
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Сравнение разный версий файла
+ * \param file Файл, который нужно сравнить
+ * \param version Версия
+ * \param versionOther Другая версия
+ */
+void TFRequest::difference( const QString& file, const QString& version, const QString& versionOther ) {
+
+    clear();
+
+    QStringList args = {
+        "diff",
+        QString("%1;C%2").arg(file, versionOther),
+        QString("%1;C%2").arg(file, version)
     };
 
     if( m_isAsync ) {

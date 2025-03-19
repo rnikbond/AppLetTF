@@ -49,6 +49,15 @@ public: // Requests
     void workspaces();
     void createWorkspace( const QString& name );
 
+    void entriesDir( const QString& dir );
+
+    void history( const QString& path );
+    void historyCertain( const QString& path, const QString& version );
+    void historyDiffPrev( const QString& path, const QString& version );
+
+    void difference( const QString& file );
+    void difference( const QString& file, const QString& version, const QString& versionOther );
+
 private:
 
     void reactOnStateChanged( QProcess::ProcessState state );

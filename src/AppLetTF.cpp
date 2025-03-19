@@ -1,8 +1,10 @@
 //----------------------------------------
+#include <QTime>
 #include <QMenu>
 #include <QDebug>
 #include <QScreen>
 #include <QCloseEvent>
+#include <QMessageBox>
 //----------------------------------------
 #include "methods.h"
 #include "SettingsDialog.h"
@@ -13,15 +15,14 @@
 
 AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF)
 {
-    setupUI  ();
-    setupArgs();
-    setupTray();
-    setupTF  ();
-    setupArgs();
+    createWorkDir();
 
-    connect( ui->pushButton, &QPushButton::clicked, [this]{
-        changeSettings();
-    } );
+    setupActions();
+    setupUI     ();
+    setupArgs   ();
+    setupTray   ();
+    setupTF     ();
+    setupArgs   ();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -106,7 +107,23 @@ void AppLetTF::init() {
         changeSettings();
     }
 
-    m_tf->setConfig( m_config );
+    if( !m_config.m_azure.diffCmd.isEmpty() ) {
+        if( !qputenv("TF_DIFF_COMMAND", m_config.m_azure.diffCmd.toUtf8().data()) ) {
+            QMessageBox::warning( this, tr("Ошибка"), tr("Не удалось установить переменнуж окружения TF_DIFF_COMMAND"), QMessageBox::Close );
+        }
+    }
+
+    m_tf            ->setConfig( m_config );
+    ui->projectsTree->setConfig( m_config );
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::setupActions() {
+
+    m_settingsAction = new QAction( tr("Настройки") );
+    //m_settingsAction->setIcon( QIcon(":/customizing.png") );
+
+    connect( m_settingsAction, &QAction::triggered, this, &AppLetTF::changeSettings );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -179,9 +196,15 @@ void AppLetTF::setupTray() {
 void AppLetTF::setupUI() {
 
     ui->setupUi( this );
-
     setWindowTitle( tr("AppLet TF") );
+    setWindowIcon( QIcon(":/branch_vsc.png") );
     moveToCenterScreen();
+
+    ui->toolBar->setMovable( false );
+    ui->toolBar->setIconSize( QSize(20, 20) );
+    ui->toolBar->addAction( m_settingsAction );
+
+    connect( ui->projectsTree, &ProjectsTree::commandExecuted, this, &AppLetTF::appendOutput );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -207,6 +230,31 @@ void AppLetTF::closeEvent( QCloseEvent* event ) {
         QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::MessageIcon(QSystemTrayIcon::Information);
         m_tray->showMessage("AppLet TF", tr("Приложение свернуто в трей"), icon, 2000 );
         m_tray_message = false;
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::appendOutput( bool isErr, int code, const QString& err, const QStringList& response ) {
+
+    ui->logEdit->append("");
+    ui->logEdit->append( QTime::currentTime().toString("hh:mm:ss.zzz") );
+
+    if( isErr) {
+        QColor textColorSave = ui->logEdit->textColor();
+
+        ui->logEdit->setTextColor( Qt::red );
+
+        ui->logEdit->append( QString("Ошибка %1").arg(code));
+        ui->logEdit->append( err );
+
+        ui->logEdit->setTextColor( textColorSave );
+        return;
+    }
+
+    if( !response.isEmpty() ) {
+        ui->logEdit->append( response.join('\n') );
+    } else {
+        ui->logEdit->append( "Success" );
     }
 }
 //----------------------------------------------------------------------------------------------------------
