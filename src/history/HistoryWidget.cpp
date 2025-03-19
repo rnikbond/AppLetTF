@@ -1,4 +1,6 @@
 //----------------------------------------
+#include <QMessageBox>
+//----------------------------------------
 #include "methods.h"
 #include "TFRequest.h"
 //----------------------------------------
@@ -90,6 +92,7 @@ void HistoryWidget::reload( const QString& path ) {
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
+        QMessageBox::critical( this, tr("Ошибка"), tf.m_errText );
         return;
     }
 

@@ -1,4 +1,6 @@
 //----------------------------------------
+#include <QMessageBox>
+//----------------------------------------
 #include "methods.h"
 #include "TFRequest.h"
 //----------------------------------------
@@ -62,6 +64,7 @@ void HistoryDetailWidget::reload( const QString& path, const QString& version ) 
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
+        QMessageBox::critical( this, tr("Ошибка"), tf.m_errText );
         return;
     }
 
@@ -161,6 +164,7 @@ void HistoryDetailWidget::diff() {
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
+        QMessageBox::critical( this, tr("Ошибка"), tf.m_errText );
         return;
     }
 
@@ -172,6 +176,10 @@ void HistoryDetailWidget::diff() {
     QString versionPrev = historyItems[1].version;
     tf.difference( path, m_version, versionPrev );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+    if( tf.m_isErr ) {
+        QMessageBox::critical( this, tr("Ошибка"), tf.m_errText );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
