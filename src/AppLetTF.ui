@@ -14,13 +14,82 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="ProjectsTree" name="projectsTree" native="true"/>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <widget class="QWidget" name="projectsTab">
+        <attribute name="title">
+         <string>Проекты</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="ProjectsTree" name="projectsTree" native="true"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="changesTab">
+        <attribute name="title">
+         <string>Изменения</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="ChangesWidget" name="changes" native="true"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
       <widget class="QTextEdit" name="logEdit"/>
      </widget>
     </item>
@@ -39,6 +108,12 @@
   </widget>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>ChangesWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">ChangesWidget.h</header>
+   <container>1</container>
+  </customwidget>
   <customwidget>
    <class>ProjectsTree</class>
    <extends>QWidget</extends>

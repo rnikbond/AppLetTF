@@ -10,10 +10,12 @@ INCLUDEPATH += src                \
                src/history        \
                src/history_detail \
                src/workspaces     \
-               src/azure_tree
+               src/azure_tree     \
+               src/changes
 
 HEADERS += src/AppLetTF.h                           \
            src/azure_tree/AzureTreeDialog.h         \
+           src/changes/ChangesWidget.h              \
            src/common.h                             \
            src/config/Config.h                      \
            src/methods.h                            \
@@ -27,7 +29,11 @@ HEADERS += src/AppLetTF.h                           \
 
 SOURCES += main.cpp                                   \
            src/AppLetTF.cpp                           \
-           src/azure_tree/AzureTreeDialog.cpp        \
+           src/azure_tree/AzureTreeDialog.cpp         \
+           src/changes/ChangesWidget.cpp              \
+           src/changes/ChangesWidget_detected.cpp     \
+           src/changes/ChangesWidget_exclude.cpp      \
+           src/changes/ChangesWidget_prepared.cpp     \
            src/tf_request/TFRequest.cpp               \
            src/config/Config.cpp                      \
            src/methods.cpp                            \
@@ -42,6 +48,7 @@ SOURCES += main.cpp                                   \
 
 FORMS   += src/AppLetTF.ui                           \
            src/azure_tree/AzureTreeDialog.ui         \
+           src/changes/ChangesWidget.ui              \
            src/settings/SettingsDialog.ui            \
            src/projects_tree/ProjectsTree.ui         \
            src/history/HistoryWidget.ui              \

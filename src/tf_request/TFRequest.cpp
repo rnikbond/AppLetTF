@@ -200,6 +200,111 @@ void TFRequest::getDir( const QString& dir, const QString& version ) {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Получение состояния изменений элемента
+ * \param path Путь к элементу
+ */
+void TFRequest::status( const QString& path ) {
+
+    QStringList args = {
+        "status",
+        "-recursive",
+        path
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Добавление новых элементов
+ * \param files Список элементов для добавления
+ */
+void TFRequest::add( const QStringList& files ) {
+
+    QStringList args = {
+        "add",
+    };
+
+    args.append( files );
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Удаление элементов
+ * \param files Список элементов для удаление
+ */
+void TFRequest::remove( const QStringList& files ) {
+
+    QStringList args = {
+        "delete",
+    };
+
+    args.append( files );
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Отмена изменений
+ * \param pathes Элементы для отмены изменений
+ */
+void TFRequest::cancelChanges( const QStringList& pathes ) {
+
+    QStringList args = {
+        "undo",
+    };
+
+    args.append( pathes );
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Фиксация изменений
+ * \param comment Комментарий
+ * \param files Список элементов для фиксации
+ */
+void TFRequest::commit( const QString& comment, const QStringList& files ) {
+
+    QStringList args = {
+        "checkin",
+        QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+        QString("-comment:%1").arg(comment)
+    };
+
+    if( !files.isEmpty() ) {
+        args.append( files );
+    }
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Получение содержимого каталога
  * \param dir Каталог, у которого нужно получить содержимое
  * \param isFiles Признак загрузки файлов

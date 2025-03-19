@@ -56,6 +56,12 @@ public: // Requests
     void getDir( const QString& dir, const QString& version = "" );
     void entriesDir( const QString& dir, bool isFiles = true );
 
+    void status( const QString& path );
+    void add( const QStringList& files );
+    void remove( const QStringList& files );
+    void cancelChanges( const QStringList& pathes );
+    void commit( const QString& comment, const QStringList& files );
+
     void history( const QString& path );
     void historyCertain( const QString& path, const QString& version );
     void historyDiffPrev( const QString& path, const QString& version );

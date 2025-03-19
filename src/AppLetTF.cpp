@@ -92,6 +92,7 @@ void AppLetTF::changeSettings() {
 
     m_tf            ->setConfig( m_config );
     ui->projectsTree->setConfig( m_config );
+    ui->changes     ->setConfig( m_config );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -120,6 +121,7 @@ void AppLetTF::init() {
 
     m_tf            ->setConfig( m_config );
     ui->projectsTree->setConfig( m_config );
+    ui->changes     ->setConfig( m_config );
 }
 //----------------------------------------------------------------------------------------------------------
 
