@@ -31,7 +31,6 @@ QList<Workspace> parseWorkspaces( const QStringList& items ) {
 
     // Строка с индексом 2 - отчерк заголовков
     QList<QPair<int, int>> positions = parsePositions( items.at(2) );
-    qDebug() << "positions: " << positions;
     if( positions.count() != 4 ) {
         return {}; // В ответе команды workspaces должно быть 4 заголовка
     }
@@ -210,22 +209,70 @@ HistoryDetailItem parseDetailHistory( const QStringList& items ) {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Получение информации о сопоставлениях
+ * \param items Список, полученный в результате запроса команды "workfolds"
+ * \return Информация о сопоставлениях
+ */
+QList<WorkfoldItem> parseWorkfolds( const QStringList& items ) {
+
+    /* Пример вывода команды
+     * [0] ===============================================================================
+     * [1] Workspace: MyPC
+     * [2] Collection: http://<host>:<port>/tfs/dir/
+     * [3] $/dir/main: /home/user/tfs/main
+     */
+
+    QList<WorkfoldItem> workfolds;
+
+    for( int i = 2; i < items.count(); i++ ) {
+
+        // [0]: $/dir/main
+        // [1]: /home/user/tfs/main
+        QStringList bundles = items[i].split(": ", Qt::SkipEmptyParts);
+        if( bundles.count() != 2 ) {
+            continue;
+        }
+
+        if( !bundles[0].contains("$") ) {
+            continue;
+        }
+
+        WorkfoldItem workfold;
+        workfold.pathServer = bundles[0];
+        workfold.pathLocal  = QDir::toNativeSeparators(bundles[1]);
+
+        workfolds.append( workfold );
+    }
+
+    return workfolds;
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Получение позиций столбцов
  * \param title Заголовок (отчерк)
  * \return Список позиций в формате: <позиция,длина>
- *
- * Пример \a title: "--------- --------------------------- -------- --------------------------------"
- *                   ^         ^                           ^        ^
- *                   0         10                          38       47
- * Пример возвращаемого значения:
- * {
- *  <0 , 9>,
- *  <10,27>,
- *  <38, 8>,
- *  <47,32>,
- * }
  */
 QList<QPair<int, int>> parsePositions( const QString& title ) {
+
+    /* Пример вывода команды (title)
+     * --------- --------------------------- -------- --------------------------------
+     */
+
+    /* Как происходит разбор
+     * --------- --------------------------- -------- --------------------------------
+     * ^         ^                           ^        ^
+     * 0         10                          38       47
+     */
+
+    /* Пример возвращаемого значения:
+     * {
+     *  <0 , 9>,
+     *  <10,27>,
+     *  <38, 8>,
+     *  <47,32>,
+     * }
+     */
 
     QList<QPair<int, int>> positions;
 

@@ -48,8 +48,12 @@ public: // Requests
 
     void workspaces();
     void createWorkspace( const QString& name );
+    void removeWorkspace( const QString& name );
 
-    void entriesDir( const QString& dir );
+    void workfolds( const QString& workspace = "" );
+    void mapWorkfold( const QString& azurePath, const QString& localPath, const QString& workspace = "" );
+
+    void entriesDir( const QString& dir, bool isFiles = true );
 
     void history( const QString& path );
     void historyCertain( const QString& path, const QString& version );

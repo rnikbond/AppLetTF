@@ -22,7 +22,7 @@
      <widget class="QListWidget" name="pagesList"/>
      <widget class="QStackedWidget" name="pagesStack">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="commonPage">
        <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -104,6 +104,25 @@
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
             <widget class="QLineEdit" name="asureUrlEdit"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="workspaceGBox">
+          <property name="title">
+           <string>Рабочая область</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QLineEdit" name="workspaceEdit"/>
+           </item>
+           <item>
+            <widget class="QToolButton" name="workspaceButton">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

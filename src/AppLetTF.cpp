@@ -80,6 +80,8 @@ void AppLetTF::reactOnTray( QSystemTrayIcon::ActivationReason reason ) {
 void AppLetTF::changeSettings() {
 
     SettingsDialog settings;
+    connect( &settings, &SettingsDialog::commandExecuted, this, &AppLetTF::appendOutput );
+
     settings.setConfig( m_config );
     if( settings.exec() != QDialog::Accepted ) {
         return;
@@ -87,6 +89,9 @@ void AppLetTF::changeSettings() {
 
     m_config = settings.config();
     m_config.save( geometry() );
+
+    m_tf            ->setConfig( m_config );
+    ui->projectsTree->setConfig( m_config );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -121,7 +126,6 @@ void AppLetTF::init() {
 void AppLetTF::setupActions() {
 
     m_settingsAction = new QAction( tr("Настройки") );
-    //m_settingsAction->setIcon( QIcon(":/customizing.png") );
 
     connect( m_settingsAction, &QAction::triggered, this, &AppLetTF::changeSettings );
 }

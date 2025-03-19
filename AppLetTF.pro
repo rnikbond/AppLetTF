@@ -8,9 +8,12 @@ INCLUDEPATH += src                \
                src/settings       \
                src/projects_tree  \
                src/history        \
-               src/history_detail
+               src/history_detail \
+               src/workspaces     \
+               src/azure_tree
 
 HEADERS += src/AppLetTF.h                           \
+           src/azure_tree/AzureTreeDialog.h         \
            src/common.h                             \
            src/config/Config.h                      \
            src/methods.h                            \
@@ -18,10 +21,13 @@ HEADERS += src/AppLetTF.h                           \
            src/settings/SettingsDialog.h            \
            src/projects_tree/ProjectsTree.h         \
            src/history/HistoryWidget.h              \
-           src/history_detail/HistoryDetailWidget.h
+           src/history_detail/HistoryDetailWidget.h \
+           src/workspaces/NewWorkspaceDialog.h      \
+           src/workspaces/WorkspacesDialog.h
 
 SOURCES += main.cpp                                   \
            src/AppLetTF.cpp                           \
+           src/azure_tree/AzureTreeDialog.cpp        \
            src/tf_request/TFRequest.cpp               \
            src/config/Config.cpp                      \
            src/methods.cpp                            \
@@ -30,13 +36,18 @@ SOURCES += main.cpp                                   \
            src/settings/SettingsDialog_common.cpp     \
            src/projects_tree/ProjectsTree.cpp         \
            src/history/HistoryWidget.cpp              \
-           src/history_detail/HistoryDetailWidget.cpp
+           src/history_detail/HistoryDetailWidget.cpp \
+           src/workspaces/NewWorkspaceDialog.cpp      \
+           src/workspaces/WorkspacesDialog.cpp
 
 FORMS   += src/AppLetTF.ui                           \
+           src/azure_tree/AzureTreeDialog.ui         \
            src/settings/SettingsDialog.ui            \
            src/projects_tree/ProjectsTree.ui         \
            src/history/HistoryWidget.ui              \
-           src/history_detail/HistoryDetailWidget.ui
+           src/history_detail/HistoryDetailWidget.ui \
+           src/workspaces/NewWorkspaceDialog.ui      \
+           src/workspaces/WorkspacesDialog.ui
 
 RESOURCES += res/res.qrc
 

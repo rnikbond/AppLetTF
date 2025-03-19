@@ -60,7 +60,7 @@ void HistoryDetailWidget::reload( const QString& path, const QString& version ) 
         return;
     }
 
-    HistoryDetailItem detail = parseDetailHistory( tf.m_response  );
+    HistoryDetailItem detail = parseDetailHistory( tf.m_response);
 
     {
         QString html = "<table width=100% height=100% border=0 cellspacing=-1 cellpadding=3 style=\"vertical-align:middle\">";

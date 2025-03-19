@@ -20,7 +20,6 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
     m_isTouchCursor = true;
 
     m_tf = new QProcess( this );
-    m_tf->setWorkingDirectory( workDirPath() );
 
     clear();
     setAsync( false );
@@ -35,8 +34,6 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
  * \brief Проверка подключения к Azure DevOps Server
  */
 void TFRequest::checkConnection() {
-
-    clear();
 
     QStringList args = {
         "workfold",
@@ -77,8 +74,8 @@ void TFRequest::workspaces() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
- * \brief Создание нового рабочего пространства
- * \param name Имя пространства
+ * \brief Создание новой рабочей области
+ * \param name Имя рабочей области
  */
 void TFRequest::createWorkspace( const QString& name ) {
 
@@ -100,17 +97,92 @@ void TFRequest::createWorkspace( const QString& name ) {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Удаление новой рабочей области
+ * \param name Имя рабочей области
+ */
+void TFRequest::removeWorkspace( const QString& name ) {
+
+    QStringList args = {
+        "workspace",
+        "-delete",
+        QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        name,
+        "-noprompt"
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение списка сопоставленных каталогов
+ * \param Рабочее пространство
+ *
+ * Если \a workspace пустое, используется рабочее пространство из конфигурации
+ */
+void TFRequest::workfolds( const QString& workspace ) {
+
+    QStringList args = {
+        "workfold",
+        QString("-workspace:%1" ).arg(workspace.isEmpty() ? m_config.m_azure.workspace : workspace),
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        QString("-login:%1,%2"  ).arg(m_config.m_azure.login, m_config.m_azure.password),
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Сопоставление каталога
+ * \param azurePath Путь к каталогу на сервере
+ * \param localPath Путь к локальному каталогу
+ * \param workspace Имя рабочей области
+ *
+ * Если \a workspace пустое, используется рабочее пространство из конфигурации
+ */
+void TFRequest::mapWorkfold( const QString& azurePath, const QString& localPath, const QString& workspace ) {
+
+    QStringList args = {
+        "workfold",
+        QString("-collection:%1").arg(m_config.m_azure.url),
+        QString("-workspace:%1" ).arg(workspace.isEmpty() ? m_config.m_azure.workspace : workspace),
+        azurePath,
+        localPath
+    };
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Получение содержимого каталога
  * \param dir Каталог, у которого нужно получить содержимое
+ * \param isFiles Признак загрузки файлов
  */
-void TFRequest::entriesDir( const QString& dir ) {
-
-    clear();
+void TFRequest::entriesDir( const QString& dir , bool isFiles ) {
 
     QStringList args = { "dir",
                         QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
                         QString("-collection:%1").arg(m_config.m_azure.url),
                         dir };
+
+    if( isFiles ) {
+        args.append( "-folders" );
+    }
 
     if( m_isAsync ) {
         m_tf->start( m_config.m_azure.tfPath, args );
@@ -125,8 +197,6 @@ void TFRequest::entriesDir( const QString& dir ) {
  * \param path Путь к элементу, у которого нужно получить журнал изменений
  */
 void TFRequest::history( const QString& path ) {
-
-    clear();
 
     // tf hist[ory]                         -
     // itemspec                             -
@@ -164,8 +234,6 @@ void TFRequest::history( const QString& path ) {
  * \param version Набор изменений (версия)
  */
 void TFRequest::historyCertain( const QString& path, const QString& version ) {
-
-    clear();
 
     // tf hist[ory]                         -
     // itemspec                             -
@@ -208,8 +276,6 @@ void TFRequest::historyCertain( const QString& path, const QString& version ) {
  */
 void TFRequest::historyDiffPrev( const QString& path, const QString& version ) {
 
-    clear();
-
     // tf hist[ory]                         -
     // itemspec                             -
     // -version:versionspec                 -
@@ -249,8 +315,6 @@ void TFRequest::historyDiffPrev( const QString& path, const QString& version ) {
  */
 void TFRequest::difference( const QString& file ) {
 
-    clear();
-
     QStringList args = {
         "diff",
         file
@@ -269,15 +333,18 @@ void TFRequest::difference( const QString& file ) {
  * \param file Файл, который нужно сравнить
  * \param version Версия
  * \param versionOther Другая версия
+ *
+ * Пример аргументов:
+ * file        : $/Project/file.txt
+ * version     : 123
+ * versionOther: 122
  */
 void TFRequest::difference( const QString& file, const QString& version, const QString& versionOther ) {
-
-    clear();
 
     QStringList args = {
         "diff",
         QString("%1;C%2").arg(file, versionOther),
-        QString("%1;C%2").arg(file, version)
+        QString("%1;C%2").arg(file, version),
     };
 
     if( m_isAsync ) {
@@ -352,6 +419,8 @@ void TFRequest::reactOnErrorOccurred( QProcess::ProcessError error ) {
  */
 void TFRequest::execute( const QStringList& args ) {
 
+    clear();
+
     if( m_isTouchCursor ) {
         QApplication::setOverrideCursor( Qt::WaitCursor );
     }
@@ -416,6 +485,11 @@ void TFRequest::setAsync( bool isAsync ) {
 void TFRequest::setConfig( const Config& cfg ) {
 
     m_config = cfg;
+
+    if( m_config.m_azure.workfoldes.count() > 0 ) {
+        QString path = m_config.m_azure.workfoldes.begin().value();
+        m_tf->setWorkingDirectory( path );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 

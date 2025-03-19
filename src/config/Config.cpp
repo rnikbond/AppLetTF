@@ -27,6 +27,7 @@
     #define CONF_PROP_DIFF_CMD        "diff_command"
     #define CONF_PROP_AZURE_URL       "url"
     #define CONF_PROP_AZURE_WORKSPACE "workspace"
+    #define CONF_PROP_AZURE_WORKFOLDS "workfolds"
     #define CONF_PROP_AZURE_LOGIN     "login"
     #define CONF_PROP_AZURE_PASSWORD  "password"
 //----------------------------------------
@@ -67,6 +68,11 @@ void Config::init( const QString& path ) {
  */
 void Config::save( QRect geometry ) {
 
+    QStringList workfolds;
+    foreach( const QString& azurePath, m_azure.workfoldes.keys() ) {
+        workfolds.append( QString("%1:%2").arg(azurePath, m_azure.workfoldes[azurePath]) );
+    }
+
     QSettings conf(m_path, QSettings::IniFormat);
 
     conf.setValue( CONF_PROP_VERSION, CONF_VERSION );
@@ -76,6 +82,7 @@ void Config::save( QRect geometry ) {
     conf.setValue( CONF_PROP_DIFF_CMD       , m_azure.diffCmd   );
     conf.setValue( CONF_PROP_AZURE_URL      , m_azure.url       );
     conf.setValue( CONF_PROP_AZURE_WORKSPACE, m_azure.workspace );
+    conf.setValue( CONF_PROP_AZURE_WORKFOLDS, workfolds         );
     conf.setValue( CONF_PROP_AZURE_LOGIN    , m_azure.login     );
     conf.setValue( CONF_PROP_AZURE_PASSWORD , m_azure.password  );
     conf.endGroup();
@@ -116,6 +123,8 @@ void Config::restore() {
         }
     }
 
+    QStringList workfolds;
+
     conf.beginGroup( CONF_GROUP_COMMON );
     m_tray = conf.value( CONF_PROP_TRAY, false ).toBool();
     conf.endGroup();
@@ -132,9 +141,23 @@ void Config::restore() {
     m_azure.diffCmd   = conf.value( CONF_PROP_DIFF_CMD        , "" ).toString();
     m_azure.url       = conf.value( CONF_PROP_AZURE_URL       , "" ).toString();
     m_azure.workspace = conf.value( CONF_PROP_AZURE_WORKSPACE , "" ).toString();
+    workfolds         = conf.value( CONF_PROP_AZURE_WORKFOLDS , {} ).toStringList();
     m_azure.login     = conf.value( CONF_PROP_AZURE_LOGIN     , "" ).toString();
     m_azure.password  = conf.value( CONF_PROP_AZURE_PASSWORD  , "" ).toString();
     conf.endGroup();
+
+    foreach( const QString& workfold, workfolds ) {
+        QStringList parts = workfold.split(":");
+        if( parts.count() != 2 ) {
+            continue;
+        }
+
+        if( !QDir(parts[1]).exists() ) {
+            continue;
+        }
+
+        m_azure.workfoldes[parts[0]] = parts[1];
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 

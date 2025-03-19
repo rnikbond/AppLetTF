@@ -53,10 +53,8 @@ private: // Page Azure
     void restoreConfigPageAzure();
 
     void changeTfPath();
+    void changeWorkspace();
 
-    bool initAzureWorkspace    ( const QList<Workspace>& workspacesAzure );
-    bool isExistsAzureWorkspace( const QList<Workspace>& workspacesAzure, const QString& name );
-    bool azureWorkspaces       ( QList<Workspace>& workspacesAzure );
     void reconnectAzure();
 
     void logAzureInfo   ( const QString& text );
@@ -64,6 +62,10 @@ private: // Page Azure
     void logAzureWarning( const QString& text );
     void logAzureSuccess( const QString& text );
     void logAzureText   ( const QString& text, const QColor& color );
+
+signals:
+
+    void commandExecuted( bool isErr, int code, const QString& err, const QStringList& result );
 };
 //----------------------------------------------------------------------------------------------------------
 

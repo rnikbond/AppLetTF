@@ -2,6 +2,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 //----------------------------------------
+#include <QList>
 #include <QString>
 //----------------------------------------
 
@@ -12,13 +13,23 @@ enum FileTypes {
 //----------------------------------------
 
 /*!
+ * \brief Структура элемента сопоставления каталогов
+ */
+struct WorkfoldItem {
+    QString pathServer; /// Путь к каталогу на сервер
+    QString pathLocal ; /// Путь к локальному каталогу
+};
+//----------------------------------------
+
+/*!
  * \brief Структура "Рабочее пространства" (Workspace)
  */
 struct Workspace {
-    QString name    ; /// Имя рабочего пространства
-    QString owner   ; /// Владелец
-    QString computer; /// Имя ПК
-    QString comment ; /// Комментарий
+    QString             name     ; /// Имя рабочего пространства
+    QString             owner    ; /// Владелец
+    QString             computer ; /// Имя ПК
+    QString             comment  ; /// Комментарий
+    QList<WorkfoldItem> workfolds; /// Список сопоставления
 };
 //----------------------------------------
 

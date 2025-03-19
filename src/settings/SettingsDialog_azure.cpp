@@ -1,10 +1,12 @@
 //----------------------------------------
+#include <QUuid>
 #include <QTime>
 #include <QDebug>
 #include <QFileDialog>
 //----------------------------------------
 #include "methods.h"
 #include "TFRequest.h"
+#include "WorkspacesDialog.h"
 //----------------------------------------
 #include "SettingsDialog.h"
 #include "ui_SettingsDialog.h"
@@ -18,6 +20,9 @@
 #endif
 //----------------------------------------
 
+/*!
+ * \brief Изменение пути к программе TF
+ */
 void SettingsDialog::changeTfPath() {
 
     QString dir = m_config.m_azure.tfPath.isEmpty() ? QDir::homePath() : m_config.m_azure.tfPath;
@@ -31,6 +36,29 @@ void SettingsDialog::changeTfPath() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Изменение рабочей области
+ */
+void SettingsDialog::changeWorkspace() {
+
+    WorkspacesDialog workspacesDialog;
+    connect( &workspacesDialog, &WorkspacesDialog::commandExecuted, this, &SettingsDialog::commandExecuted );
+    workspacesDialog.setConfig( m_config );
+    if( workspacesDialog.exec() != QDialog::Accepted ) {
+        return;
+    }
+
+    Workspace workspace = workspacesDialog.selectedWorkspace();
+    m_config.m_azure.workspace = workspace.name;
+
+    foreach( const WorkfoldItem& workfold, workspace.workfolds ) {
+        m_config.m_azure.workfoldes[workfold.pathServer] = workfold.pathLocal;
+    }
+
+    ui->workspaceEdit->setText( m_config.m_azure.workspace );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Переподключение к Azure DevOps Server
  */
 void SettingsDialog::reconnectAzure() {
@@ -40,61 +68,42 @@ void SettingsDialog::reconnectAzure() {
     saveConfigPageAzure();
 
     if( m_config.m_azure.tfPath.isEmpty() ) {
-        logAzureError( "Не указан путь к программе TF" );
+        logAzureError( tr("Не указан путь к программе TF") );
         ui->tfPathEdit->setFocus();
         return;
     }
 
     if( m_config.m_azure.diffCmd.isEmpty() ) {
-        logAzureWarning( "Не указана программа для сравнения TF_DIFF_COMMAND" );
+        logAzureWarning( tr("Не указана программа для сравнения TF_DIFF_COMMAND") );
     }
 
     if( !QFile(m_config.m_azure.tfPath).exists() ) {
-        logAzureError( "Не найдена программа TF" );
+        logAzureError( tr("Не найдена программа TF") );
         ui->tfPathEdit->setFocus();
         return;
     }
 
     if( m_config.m_azure.url.isEmpty() ) {
-        logAzureError( "Не указан URL" );
+        logAzureError( tr("Не указан URL") );
         ui->asureUrlEdit->setFocus();
         return;
     }
 
     if( m_config.m_azure.login.isEmpty() ) {
-        logAzureError( "Не указан Логин" );
+        logAzureError( tr("Не указан Логин") );
         ui->loginEdit->setFocus();
         return;
     }
 
     if( m_config.m_azure.password.isEmpty() ) {
-        logAzureError( "Не указан Пароль" );
+        logAzureError( tr("Не указан Пароль") );
         ui->passwordEdit->setFocus();
         return;
     }
 
-    QList<Workspace> workspacesAzure;
-    if( !azureWorkspaces(workspacesAzure) ) {
-        return;
-    }
-
-    if( !m_config.m_azure.workspace.isEmpty() ) {
-
-        if( !isExistsAzureWorkspace(workspacesAzure, m_config.m_azure.workspace) ) {
-            logAzureWarning( tr("Рабочее пространство %1 не найдено").arg(m_config.m_azure.workspace) );
-            m_config.m_azure.workspace.clear();
-        }
-    }
-
     if( m_config.m_azure.workspace.isEmpty() ) {
-        logAzureInfo( tr("Подключение к рабочему пространству...") );
-        if( !initAzureWorkspace(workspacesAzure) ) {
-            return;
-        }
-    }
-
-    if( m_config.m_azure.workspace.isEmpty() ) {
-        logAzureError( tr("Не удалось подключиться к рабочему пространству") );
+        logAzureError( tr("Не настроена рабочая область") );
+        ui->workspaceButton->setFocus();
         return;
     }
 
@@ -108,82 +117,6 @@ void SettingsDialog::reconnectAzure() {
     }
 
     logAzureSuccess( "Подключение успешно установлено" );
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Проверка существования рабочего пространства
- * \param workspacesAzure Список рабочих пространств
- * \param name Название рабочего пространства, которое нужно проверить
- * \return TRUE, если существует. Иначе FALSE.
- */
-bool SettingsDialog::isExistsAzureWorkspace( const QList<Workspace>& workspacesAzure, const QString& name ) {
-
-    foreach( const Workspace& workspace, workspacesAzure ) {
-        if( QString::compare(workspace.name, name, Qt::CaseInsensitive) == 0 ) {
-            return true;
-        }
-    }
-
-    return false;
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Получени списка абочих пространств с Azure DevOps Server
- * \param[out] workspacesAzure Список рабочих пространств
- * \return TRUE, если удалось загрузить информацию. Иначе FALSE.
- */
-bool SettingsDialog::azureWorkspaces( QList<Workspace>& workspacesAzure ) {
-
-    workspacesAzure.clear();
-
-    TFRequest tf;
-    tf.setConfig( m_config );
-    tf.workspaces();
-
-    if( tf.m_isErr ) {
-        logAzureError( tf.m_errText );
-        return false;
-    }
-
-    workspacesAzure = parseWorkspaces( tf.m_response );
-    return true;
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Инициализация рабочего пространства
- * \param workspacesAzure Список рабочих пространств
- * \return TRUE, если удалось подключиться к рабочему пространстру или создать его. Иначе False.
- *
- * В качестве имени рабочего пространства используется имя ПК.
- * Если такое имя существует в \a workspacesAzure, то используется это рабочее пространство.
- * Если такого рабочего пространства нет в \a workspacesAzure, то выполняется запрос на его создание.
- */
-bool SettingsDialog::initAzureWorkspace( const QList<Workspace>& workspacesAzure ) {
-
-    QString machineHostName = QSysInfo::machineHostName();
-
-    if( !isExistsAzureWorkspace(workspacesAzure, machineHostName) ) {
-
-        logAzureInfo( tr("Создается рабочее пространство: %1").arg(machineHostName) );
-
-        TFRequest tf;
-        tf.setConfig( m_config );
-        tf.createWorkspace( machineHostName );
-        if( tf.m_isErr ) {
-            logAzureError( tf.m_errText );
-            return false;
-        }
-
-    } else {
-        m_config.m_azure.workspace = QSysInfo::machineHostName();
-    }
-
-    logAzureSuccess( tr("Подключено к рабочему пространсву: %1").arg(m_config.m_azure.workspace) );
-
-    return true;
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -206,10 +139,12 @@ void SettingsDialog::saveConfigPageAzure() {
 void SettingsDialog::restoreConfigPageAzure() {
 
     ui->tfPathEdit  ->setText( m_config.m_azure.tfPath   );
-    ui->diffToolEdit->setText( m_config.m_azure.diffCmd );
+    ui->diffToolEdit->setText( m_config.m_azure.diffCmd  );
     ui->asureUrlEdit->setText( m_config.m_azure.url      );
     ui->loginEdit   ->setText( m_config.m_azure.login    );
     ui->passwordEdit->setText( m_config.m_azure.password );
+
+    ui->workspaceEdit->setText( m_config.m_azure.workspace );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -224,8 +159,11 @@ void SettingsDialog::initPageAzure() {
 
     ui->azureChechButton->setIcon( QIcon(":/settings_update.png") );
 
-    connect( ui->tfPathButton    , &QToolButton::clicked, this, &SettingsDialog::changeTfPath   );
-    connect( ui->azureChechButton, &QPushButton::clicked, this, &SettingsDialog::reconnectAzure );
+    ui->workspaceEdit->setReadOnly( true );
+
+    connect( ui->tfPathButton    , &QToolButton::clicked, this, &SettingsDialog::changeTfPath    );
+    connect( ui->workspaceButton , &QToolButton::clicked, this, &SettingsDialog::changeWorkspace );
+    connect( ui->azureChechButton, &QPushButton::clicked, this, &SettingsDialog::reconnectAzure  );
 }
 //----------------------------------------------------------------------------------------------------------
 
