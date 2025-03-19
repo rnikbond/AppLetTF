@@ -74,10 +74,14 @@ void ProjectsTree::cloneLasted() {
 
     QString path = item->data(0, TFSPathRole).toString() ;
 
-    // ManagerTFS tfs;
-    // tfs.setConfiguration( config );
-    // tfs.cloneDir( path );
-    // emit commandExecuted( tfs.m_error_code, tfs.m_error_text, tfs.m_result );
+    TFRequest tf;
+    tf.setConfig( m_config );
+    tf.getDir( path );
+    emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+    if( tf.m_isErr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -93,35 +97,40 @@ void ProjectsTree::cloneCertain() {
 
     QString path = item->data(0, TFSPathRole).toString();
 
-    // ManagerTFS tfs;
-    // tfs.setConfiguration( config );
-    // tfs.history( path);
-    // emit commandExecuted( tfs.m_error_code, tfs.m_error_text, tfs.m_result );
+    TFRequest tf;
+    tf.setConfig( m_config );
+    tf.history( path );
+    emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
-    // if( tfs.m_error_code != 0 ) {
-    //     return;
-    // }
+    if( tf.m_isErr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+        return;
+    }
 
-    // QList<HistoryItem> historyItems = parseHistory( tfs.m_result );
-    // QStringList changeSets;
-    // foreach( const HistoryItem& historyItem, historyItems) {
-    //     changeSets.append( historyItem.version );
-    // }
+    QList<HistoryItem> historyItems = parseHistory( tf.m_response );
+    QStringList changeSets;
+    foreach( const HistoryItem& historyItem, historyItems) {
+        changeSets.append( historyItem.version );
+    }
 
-    // bool ok;
-    // QString version = QInputDialog::getItem( this,
-    //                                          tr("Выберите набор изменений"),
-    //                                          tr("Набор изменений:"), changeSets,
-    //                                          1,
-    //                                          false,
-    //                                          &ok );
+    bool ok;
+    QString version = QInputDialog::getItem( this,
+                                             tr("Выберите набор изменений"),
+                                             tr("Набор изменений:"), changeSets,
+                                             1,
+                                             false,
+                                             &ok );
 
-    // if( !ok ) {
-    //     return;
-    // }
+    if( !ok ) {
+        return;
+    }
 
-    // tfs.cloneDir( path, version );
-    // emit commandExecuted( tfs.m_error_code, tfs.m_error_text, tfs.m_result );
+    tf.getDir( path, version );
+    emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+    if( tf.m_isErr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 

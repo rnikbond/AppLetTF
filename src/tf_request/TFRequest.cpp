@@ -170,6 +170,36 @@ void TFRequest::mapWorkfold( const QString& azurePath, const QString& localPath,
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Загрузка каталога
+ * \param dir Путь к каталогу
+ * \param version Набор изменений (версия)
+ *
+ * Если \a version не указан, загружается последняя версия.
+ */
+void TFRequest::getDir( const QString& dir, const QString& version ) {
+
+    QStringList args = { "get",
+        dir,
+        "-recursive",
+        "-overwrite",
+        "-force",
+        "-noprompt",
+        QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+    };
+
+    if( !version.isEmpty() ) {
+        args.append( QString("-varsion:").arg(version) );
+    }
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Получение содержимого каталога
  * \param dir Каталог, у которого нужно получить содержимое
  * \param isFiles Признак загрузки файлов

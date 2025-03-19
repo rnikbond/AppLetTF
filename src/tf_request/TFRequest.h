@@ -53,6 +53,7 @@ public: // Requests
     void workfolds( const QString& workspace = "" );
     void mapWorkfold( const QString& azurePath, const QString& localPath, const QString& workspace = "" );
 
+    void getDir( const QString& dir, const QString& version = "" );
     void entriesDir( const QString& dir, bool isFiles = true );
 
     void history( const QString& path );
