@@ -19,6 +19,8 @@ ChangesWidget::ChangesWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::Ch
     setupExcluded();
     setupDetected();
 
+    m_reloadAction = new QAction( QIcon(":/reload.png"), tr("Обновить"), this );
+
     m_reloadState = false;
 
 #ifdef WIN32
@@ -34,12 +36,28 @@ ChangesWidget::ChangesWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::Ch
         { tr("delete"), DeleteStatus },
     };
 #endif
+
+    connect( m_reloadAction, &QAction::triggered, this, &ChangesWidget::reload );
 }
 //----------------------------------------------------------------------------------------------------------
 
 ChangesWidget::~ChangesWidget() {
 
     delete ui;
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение списка действий
+ * \return
+ */
+QList<QAction*> ChangesWidget::actions() const {
+
+    return {
+             m_preparedDiffAction  ,
+             m_preparedCancelAction,
+             m_reloadAction        ,
+            };
 }
 //----------------------------------------------------------------------------------------------------------
 

@@ -33,6 +33,7 @@ class ChangesWidget : public QWidget {
 
     bool m_reloadState;
     Config m_config;
+    QAction* m_reloadAction;
     QMap<QString, int> m_statusesTfsMap;
 
 public:
@@ -45,9 +46,10 @@ public:
 
     bool isReloaded() const;
 
+    QList<QAction*> actions() const;
+
 private: // Prepared Tree
 
-    QToolButton* m_reloadPreparedButton;
     QMenu      * m_preparedCtxMenu     ;
     QAction    * m_preparedDiffAction  ;
     QAction    * m_preparedCancelAction;
@@ -69,7 +71,6 @@ private: // Prepared Tree
 
 private: // Detected Tree
 
-    QToolButton* m_reloadDetectedButton;
     QMenu      * m_detectedCtxMenu;
     QAction    * m_detectedApplyAction;
     QMap<QString, QTreeWidgetItem*> m_detectedDirItems;
@@ -83,7 +84,6 @@ private: // Detected Tree
 
 private: // Exclude Tree
 
-    QToolButton* m_reloadExcludedButton;
     QStringList m_excluded;
     QMap<QString, QTreeWidgetItem*> m_excludedDirItems;
 

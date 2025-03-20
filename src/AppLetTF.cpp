@@ -21,8 +21,9 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupUI     ();
     setupArgs   ();
     setupTray   ();
-    setupTF     ();
     setupArgs   ();
+
+    m_logAction->setChecked( true );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -33,26 +34,74 @@ AppLetTF::~AppLetTF() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
- * \brief Обработка выполненой команды TF
+ * \brief Отображение проектов
  */
-void AppLetTF::reactOnCmdExecuted() {
+void AppLetTF::showProjects() {
 
-    if( m_tf->m_isErr ) {
-        qDebug() << m_tf->m_errCode << m_tf->m_errText;
-        return;
+    m_projectsAction->blockSignals( true  );
+    m_changesAction ->blockSignals( true  );
+    m_projectsAction->setChecked  ( true  );
+    m_changesAction ->setChecked  ( false );
+    m_projectsAction->blockSignals( false );
+    m_changesAction ->blockSignals( false );
+
+    ui->stackedWidget->setCurrentWidget( ui->projectsPage );
+    reloadActions();
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Отображение изменений
+ */
+void AppLetTF::showChanges() {
+
+    m_projectsAction->blockSignals( true  );
+    m_changesAction ->blockSignals( true  );
+    m_projectsAction->setChecked  ( false );
+    m_changesAction ->setChecked  ( true  );
+    m_projectsAction->blockSignals( false );
+    m_changesAction ->blockSignals( false );
+
+    ui->stackedWidget->setCurrentWidget( ui->changesPage );
+    reloadActions();
+
+    if( !ui->changes->isReloaded() ) {
+        ui->changes->reload();
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::reloadActions() {
+
+    auto stretchWidget = [&]() {
+        QWidget* widget = new QWidget;
+        widget->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
+        return widget;
+    };
+
+    QList<QAction*> actions;
+    if( ui->stackedWidget->currentWidget() == ui->projectsPage ) {
+        actions = ui->projectsTree->actions();
+    } else {
+        actions = ui->changes->actions();
     }
 
-    switch( m_tf->m_cmd ) {
+    ui->toolBar->clear();
 
-        case TFRequest::CommandWorkspaces: {
-            auto workspaces = parseWorkspaces( m_tf->m_response );
-            foreach(auto workspace, workspaces) {
-                qDebug() << workspace.name << workspace.owner << workspace.computer << workspace.comment;
-            }
-            break;
-        }
+    ui->toolBar->addAction ( m_projectsAction );
+    ui->toolBar->addAction ( m_changesAction  );
+    ui->toolBar->addSeparator();
+    ui->toolBar->addActions( actions );
+    ui->toolBar->addWidget ( stretchWidget());
+    ui->toolBar->addSeparator();
+    ui->toolBar->addAction ( m_logAction      );
+    ui->toolBar->addAction ( m_settingsAction );
 
-        default: break;
+    ui->toolBar->setStyleSheet( "width: 100%;" );
+    QLayout* toolBarLayout = ui->toolBar->layout();
+    for(int i = 0; i < toolBarLayout->count(); ++i) {
+        QLayoutItem* item = toolBarLayout->itemAt(i);
+        item->setAlignment( Qt::AlignLeft );
     }
 }
 //----------------------------------------------------------------------------------------------------------
@@ -90,9 +139,14 @@ void AppLetTF::changeSettings() {
     m_config = settings.config();
     m_config.save( geometry() );
 
-    m_tf            ->setConfig( m_config );
     ui->projectsTree->setConfig( m_config );
     ui->changes     ->setConfig( m_config );
+}
+//----------------------------------------------------------------------------------------------------------
+
+void AppLetTF::changeOutput() {
+
+    ui->logEdit->setVisible( m_logAction->isChecked() );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -119,9 +173,10 @@ void AppLetTF::init() {
         }
     }
 
-    m_tf            ->setConfig( m_config );
     ui->projectsTree->setConfig( m_config );
     ui->changes     ->setConfig( m_config );
+
+    showProjects();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -130,9 +185,29 @@ void AppLetTF::init() {
  */
 void AppLetTF::setupActions() {
 
-    m_settingsAction = new QAction( tr("Настройки") );
+    QActionGroup* tabsActionGroup = new QActionGroup( this );
 
+    m_projectsAction = new QAction( tr("Проекты"  ) );
+    m_changesAction  = new QAction( tr("Изменения") );
+    m_settingsAction = new QAction( tr("Настройки") );
+    m_logAction      = new QAction( tr("Вывод"    ) );
+
+    m_projectsAction->setIcon( QIcon(":/project_tree.png") );
+    m_changesAction ->setIcon( QIcon(":/wait_edit.png"   ) );
+    m_settingsAction->setIcon( QIcon(":/settings.png"    ) );
+    m_logAction     ->setIcon( QIcon(":/message.png"     ) );
+
+    m_projectsAction->setCheckable( true );
+    m_changesAction ->setCheckable( true );
+    m_logAction     ->setCheckable( true );
+
+    tabsActionGroup->addAction( m_projectsAction );
+    tabsActionGroup->addAction( m_changesAction  );
+
+    connect( m_projectsAction, &QAction::triggered, this, &AppLetTF::showProjects   );
+    connect( m_changesAction , &QAction::triggered, this, &AppLetTF::showChanges    );
     connect( m_settingsAction, &QAction::triggered, this, &AppLetTF::changeSettings );
+    connect( m_logAction     , &QAction::triggered, this, &AppLetTF::changeOutput   );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -167,18 +242,6 @@ void AppLetTF::setupArgs() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
- * \brief Настройка инструмента для работы с программой TF
- */
-void AppLetTF::setupTF() {
-
-    m_tf = new TFRequest( this );
-    m_tf->setAsync( true );
-
-    connect( m_tf, &TFRequest::executed, this, &AppLetTF::reactOnCmdExecuted );
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
  * \brief Настройка инструментов для работы в трее
  */
 void AppLetTF::setupTray() {
@@ -205,15 +268,18 @@ void AppLetTF::setupTray() {
 void AppLetTF::setupUI() {
 
     ui->setupUi( this );
+
     setWindowTitle( tr("AppLet TF") );
     setWindowIcon( QIcon(":/branch_vsc.png") );
     moveToCenterScreen();
 
     ui->toolBar->setMovable( false );
     ui->toolBar->setIconSize( QSize(20, 20) );
-    ui->toolBar->addAction( m_settingsAction );
+    ui->toolBar->setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
 
     connect( ui->projectsTree, &ProjectsTree::commandExecuted, this, &AppLetTF::appendOutput );
+
+    addToolBar( Qt::LeftToolBarArea, ui->toolBar );
 }
 //----------------------------------------------------------------------------------------------------------
 

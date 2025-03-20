@@ -341,16 +341,14 @@ void ChangesWidget::updateCommitSize() {
  */
 void ChangesWidget::setupPrepared() {
 
-    m_reloadPreparedButton = new QToolButton( this );
     m_preparedCtxMenu      = new QMenu( this );
-    m_preparedDiffAction   = new QAction( QIcon(":/compare_files.png"), tr("Сравнить с последней версией") );
-    m_preparedCancelAction = new QAction( QIcon(":/undo.png"         ), tr("Отменить изменения") );
-    m_excludeAction        = new QAction( tr("Исключить") );
+    m_preparedDiffAction   = new QAction( QIcon(":/compare.png"), tr("Сравнить" ) );
+    m_preparedCancelAction = new QAction( QIcon(":/undo.png"   ), tr("Отменить" ) );
+    m_excludeAction        = new QAction( QIcon(":/exclude.png"), tr("Исключить") );
 
-    m_reloadPreparedButton->setToolTip( tr("Обновить") );
-    m_reloadPreparedButton->setIcon( QIcon(":/refresh.png") );
-
-    ui->preparedTab->setCornerWidget( m_reloadPreparedButton, Qt::TopLeftCorner );
+    m_preparedDiffAction  ->setToolTip( tr("Сравнить с последней версией") );
+    m_preparedCancelAction->setToolTip( tr("Отменить изменения") );
+    m_excludeAction       ->setToolTip( tr("Исключить") );
 
     ui->preparedTree->header()->hide();
     ui->preparedTree->setContextMenuPolicy( Qt::CustomContextMenu );
@@ -367,7 +365,6 @@ void ChangesWidget::setupPrepared() {
     connect( ui->preparedTree      , &QTreeWidget::itemChanged               , this, &ChangesWidget::reactOnPreparedItemChanged   );
     connect( ui->preparedTree      , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnPreparedMenuRequested );
     connect( ui->commitButton      , &QPushButton::clicked                   , this, &ChangesWidget::reactOnCommit                );
-    connect( m_reloadPreparedButton, &QToolButton::clicked                   , this, &ChangesWidget::reloadPrepared               );
 
     QAbstractTextDocumentLayout* docLayout = ui->commentEdit->document()->documentLayout();
     connect( docLayout, &QAbstractTextDocumentLayout::documentSizeChanged, this, &ChangesWidget::updateCommitSize );

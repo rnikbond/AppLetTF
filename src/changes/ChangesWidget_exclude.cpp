@@ -93,16 +93,7 @@ void ChangesWidget::createExcludedFileItem( const QString& file, const QString& 
  */
 void ChangesWidget::setupExcluded() {
 
-    m_reloadExcludedButton = new QToolButton( this );
-
-    m_reloadExcludedButton->setToolTip( tr("Обновить") );
-    m_reloadExcludedButton->setIcon( QIcon(":/refresh.png") );
-
-    ui->excludedTab->setCornerWidget( m_reloadExcludedButton, Qt::TopLeftCorner );
-
     ui->excludedTree->header()->hide();
     ui->excludedTree->setContextMenuPolicy( Qt::CustomContextMenu );
-
-    connect( m_reloadExcludedButton, &QToolButton::clicked, this, &ChangesWidget::reloadExcluded );
 }
  //----------------------------------------------------------------------------------------------------------

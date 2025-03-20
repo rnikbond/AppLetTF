@@ -51,6 +51,8 @@ public:
     void cloneCertain();
     void history();
 
+    QList<QAction*> actions() const;
+
 private:
 
     void expand( QTreeWidgetItem* item );

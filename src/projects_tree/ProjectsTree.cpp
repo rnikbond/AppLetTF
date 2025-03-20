@@ -43,6 +43,20 @@ ProjectsTree::~ProjectsTree() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Получение списка действий
+ * \return
+ */
+QList<QAction*> ProjectsTree::actions() const {
+
+    return {
+             m_cloneLastedAction,
+             m_historyAction     ,
+             m_reloadAction      ,
+           };
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Отображение журнала изменений выбранного элемента
  */
 void ProjectsTree::history() {
@@ -387,10 +401,10 @@ void ProjectsTree::setConfig( const Config& cfg ) {
  */
 void ProjectsTree::setupActions() {
 
-    m_cloneLastedAction  = new QAction( QIcon(":/save.png"   ), tr("Получить последнюю версию"   ) );
-    m_cloneСertainAction = new QAction( QIcon(":/save.png"   ), tr("Получить определенную версию") );
-    m_historyAction      = new QAction( QIcon(":/file.png"   ), tr("Посмотреть журнал"           ) );
-    m_reloadAction       = new QAction( QIcon(":/refresh.png"), tr("Перезагрузить дерево"        ) );
+    m_cloneLastedAction  = new QAction( QIcon(":/save.png"  ), tr("Клонировать"       ) );
+    m_cloneСertainAction = new QAction( QIcon(":/save.png"  ), tr("Клонировать версию") );
+    m_historyAction      = new QAction( QIcon(":/list.png"  ), tr("Журнал"            ) );
+    m_reloadAction       = new QAction( QIcon(":/reload.png"), tr("Обновить"          ) );
 
     connect( m_reloadAction      , &QAction::triggered, this, &ProjectsTree::reload       );
     connect( m_historyAction     , &QAction::triggered, this, &ProjectsTree::history      );

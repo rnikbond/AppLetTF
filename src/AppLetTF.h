@@ -6,7 +6,6 @@
 #include <QSystemTrayIcon>
 //----------------------------------------
 #include "Config.h"
-#include "TFRequest.h"
 //----------------------------------------
 namespace Ui { class AppLetTF; }
 //----------------------------------------
@@ -28,13 +27,6 @@ private: // Config
 
     void changeSettings();
 
-private: // TF
-
-    TFRequest* m_tf;
-
-    void setupTF();
-    void reactOnCmdExecuted();
-
 private: // Log
 
     void appendOutput( bool isErr, int code, const QString& err, const QStringList& response );
@@ -51,7 +43,10 @@ private: // Tray
 
 private: // Actions
 
+    QAction* m_projectsAction;
+    QAction* m_changesAction ;
     QAction* m_settingsAction;
+    QAction* m_logAction     ;
 
     void setupActions();
 
@@ -63,9 +58,15 @@ private: // UI
     void setupArgs();
     void moveToCenterScreen();
 
+    void showProjects ();
+    void showChanges  ();
+    void reloadActions();
+
+    void changeOutput();
+
 protected:
 
-    void closeEvent( QCloseEvent* event );
+    void closeEvent( QCloseEvent* event ) override;
 };
 //----------------------------------------------------------------------------------------------------------
 

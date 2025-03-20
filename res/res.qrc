@@ -1,6 +1,17 @@
 <RCC>
     <qresource prefix="/">
-        <file>folder.png</file>
+        <file>apply.png</file>
         <file>branch_vsc.png</file>
+        <file>compare.png</file>
+        <file>exclude.png</file>
+        <file>folder.png</file>
+        <file>list.png</file>
+        <file>project_tree.png</file>
+        <file>reload.png</file>
+        <file>save.png</file>
+        <file>settings.png</file>
+        <file>undo.png</file>
+        <file>wait_edit.png</file>
+        <file>message.png</file>
     </qresource>
 </RCC>

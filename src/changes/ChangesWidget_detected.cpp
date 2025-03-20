@@ -177,22 +177,17 @@ void ChangesWidget::createDetectedFileItem( const QString& file, const QString& 
  */
 void ChangesWidget::setupDetected() {
 
-    m_reloadDetectedButton = new QToolButton( this );
     m_detectedCtxMenu      = new QMenu( this );
-    m_detectedApplyAction  = new QAction( tr("Применить изменения") );
+    m_detectedApplyAction  = new QAction( QIcon(":/apply.png"), tr("Применить") );
 
-    m_reloadDetectedButton->setToolTip( tr("Обновить") );
-    m_reloadDetectedButton->setIcon( QIcon(":/refresh.png") );
-
-    ui->detectedTab->setCornerWidget( m_reloadDetectedButton, Qt::TopLeftCorner );
+    m_detectedApplyAction->setToolTip( tr("Применить изменения") );
 
     ui->detectedTree->header()->hide();
     ui->detectedTree->setContextMenuPolicy( Qt::CustomContextMenu );
 
     m_detectedCtxMenu->addAction(m_detectedApplyAction);
 
-    connect( m_detectedApplyAction , &QAction    ::triggered                 , this, &ChangesWidget::reactOnDetectedApply         );
-    connect( ui->detectedTree      , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnDetectedMenuRequested );
-    connect( m_reloadDetectedButton, &QToolButton::clicked                   , this, &ChangesWidget::reloadDetected               );
+    connect( m_detectedApplyAction, &QAction    ::triggered                , this, &ChangesWidget::reactOnDetectedApply         );
+    connect( ui->detectedTree    , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnDetectedMenuRequested );
 }
 //----------------------------------------------------------------------------------------------------------

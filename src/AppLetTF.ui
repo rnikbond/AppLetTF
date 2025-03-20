@@ -16,33 +16,30 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <property name="spacing">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="leftMargin">
-     <number>0</number>
+     <number>2</number>
     </property>
     <property name="topMargin">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="rightMargin">
-     <number>0</number>
+     <number>2</number>
     </property>
     <property name="bottomMargin">
-     <number>0</number>
+     <number>4</number>
     </property>
     <item>
      <widget class="QSplitter" name="splitter">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QTabWidget" name="tabWidget">
+      <widget class="QStackedWidget" name="stackedWidget">
        <property name="currentIndex">
         <number>0</number>
        </property>
-       <widget class="QWidget" name="projectsTab">
-        <attribute name="title">
-         <string>Проекты</string>
-        </attribute>
+       <widget class="QWidget" name="projectsPage">
         <layout class="QVBoxLayout" name="verticalLayout">
          <property name="spacing">
           <number>0</number>
@@ -64,10 +61,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="changesTab">
-        <attribute name="title">
-         <string>Изменения</string>
-        </attribute>
+       <widget class="QWidget" name="changesPage">
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <property name="spacing">
           <number>0</number>
