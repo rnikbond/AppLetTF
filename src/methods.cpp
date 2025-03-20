@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QStyle>
 #include <QDebug>
+#include <QPainter>
 #include <QApplication>
 #include <QTemporaryFile>
 #include <QFileIconProvider>
@@ -364,6 +365,31 @@ QPixmap icon( const QString& name , int fileType ) {
     }
 
     return image;
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение сдвоенной иконки
+ * \param fileName Имя файла
+ * \param iconPath Путь к иконке
+ * \return Сдвоенную иконку
+ */
+QPixmap joinIconsFile( const QString& fileName, const QString& iconPath ) {
+
+    int spacing = 20;
+    QSize iconSize = QSize( 64, 64 );
+
+    QPixmap pixmapLeft  = QPixmap(iconPath).scaled(iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QPixmap pixmapRight = icon(fileName, File);
+    QPixmap pixmapMix  ( iconSize.width() * 2 + spacing, iconSize.height() );
+
+    pixmapMix.fill( Qt::transparent );
+
+    QPainter painter( &pixmapMix );
+    painter.drawPixmap( 0, 0, pixmapLeft );
+    painter.drawPixmap( pixmapLeft.width() + spacing, 0, pixmapRight );
+
+    return pixmapMix;
 }
 //----------------------------------------------------------------------------------------------------------
 

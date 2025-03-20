@@ -401,10 +401,10 @@ void ProjectsTree::setConfig( const Config& cfg ) {
  */
 void ProjectsTree::setupActions() {
 
-    m_cloneLastedAction  = new QAction( QIcon(":/save.png"  ), tr("Клонировать"       ) );
-    m_cloneСertainAction = new QAction( QIcon(":/save.png"  ), tr("Клонировать версию") );
-    m_historyAction      = new QAction( QIcon(":/list.png"  ), tr("Журнал"            ) );
-    m_reloadAction       = new QAction( QIcon(":/reload.png"), tr("Обновить"          ) );
+    m_cloneLastedAction  = new QAction( QIcon(":/save.png"  ), tr("Получить"       ) );
+    m_cloneСertainAction = new QAction( QIcon(":/save.png"  ), tr("Получить версию") );
+    m_historyAction      = new QAction( QIcon(":/list.png"  ), tr("Журнал"         ) );
+    m_reloadAction       = new QAction( QIcon(":/reload.png"), tr("Обновить"       ) );
 
     connect( m_reloadAction      , &QAction::triggered, this, &ProjectsTree::reload       );
     connect( m_historyAction     , &QAction::triggered, this, &ProjectsTree::history      );

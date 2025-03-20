@@ -20,6 +20,7 @@ QString projectName( const QString& path );
 void splitPath( const QString& path, QString& folder, QString& file );
 
 QPixmap icon( const QString& name, int fileType );
+QPixmap joinIconsFile( const QString& fileName, const QString& iconPath );
 
 void createWorkDir();
 QString workDirPath();

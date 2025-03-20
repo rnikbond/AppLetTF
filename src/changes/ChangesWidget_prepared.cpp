@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QAbstractTextDocumentLayout>
 //----------------------------------------
+#include "methods.h"
 #include "TFRequest.h"
 //----------------------------------------
 #include "ChangesWidget.h"
@@ -26,7 +27,7 @@ void ChangesWidget::reactOnCommit() {
         for( int file_idx = 0; file_idx < dirItem->childCount(); file_idx++ ) {
 
             QTreeWidgetItem* fileItem = dirItem->child( file_idx );
-            if( fileItem->checkState(0) == Qt::Unchecked ) {
+            if( fileItem->checkState(0) != Qt::Checked ) {
                 continue;
             }
 
@@ -83,19 +84,21 @@ void ChangesWidget::reactOnPreparedDiff() {
 void ChangesWidget::reactOnPreparedCancel() {
 
     QStringList undoPathes;
+    QStringList undoNames;
 
-    QList<QTreeWidgetItem*> items = ui->preparedTree->selectedItems();
-    foreach( QTreeWidgetItem* item, items ) {
+    for( int dir_idx = 0; dir_idx < ui->preparedTree->topLevelItemCount(); dir_idx++ ) {
 
-        if( item->parent() == nullptr ) {
-            for( int idx = 0; idx < item->childCount(); idx++ ) {
-                QTreeWidgetItem* childItem = item->child( idx );
-                QString path = childItem->data(0, PathRole).toString();
-                undoPathes.append( path );
+        QTreeWidgetItem* dirItem = ui->preparedTree->topLevelItem( dir_idx );
+        for( int file_idx = 0; file_idx < dirItem->childCount(); file_idx++ ) {
+
+            QTreeWidgetItem* fileItem = dirItem->child( file_idx );
+            if( fileItem->checkState(0) != Qt::Checked ) {
+                continue;
             }
-        } else {
-            QString path = item->data(0, PathRole).toString();
+
+            QString path = fileItem->data(0, PathRole).toString();
             undoPathes.append( path );
+            undoNames.append( fileItem->text(0) );
         }
     }
 
@@ -103,6 +106,22 @@ void ChangesWidget::reactOnPreparedCancel() {
         return;
     }
 
+    QMessageBox messageBox( QMessageBox::Question,
+                           tr("Отмена изменений"),
+                           tr("Отменить изменения в этих файлах?"),
+                           QMessageBox::Yes | QMessageBox::No );
+    messageBox.setDetailedText(undoNames.join("\n"));
+    messageBox.setDefaultButton( QMessageBox::No );
+    foreach( QAbstractButton *button, messageBox.buttons() ) {
+        if (messageBox.buttonRole(button) == QMessageBox::ActionRole) {
+            button->click();
+            break;
+        }
+    }
+
+    if( messageBox.exec() != QMessageBox::Yes ) {
+        return;
+    }
 
     TFRequest tf;
     tf.setConfig( m_config );
@@ -126,21 +145,28 @@ void ChangesWidget::reactOnPreparedExclude() {
     QStringList             pathes;
     QList<QTreeWidgetItem*> removeItems;
 
-    QList<QTreeWidgetItem*> items = ui->preparedTree->selectedItems();
-    foreach( QTreeWidgetItem* item, items ) {
+    for( int dir_idx = 0; dir_idx < ui->preparedTree->topLevelItemCount(); dir_idx++ ) {
 
-        if( item->parent() == nullptr ) {
-            for( int idx = 0; idx < item->childCount(); idx++ ) {
-                QTreeWidgetItem* childItem = item->child( idx );
-                QString path = childItem->data(0, PathRole).toString();
-                pathes.append( path );
+        QTreeWidgetItem* folderItem = ui->preparedTree->topLevelItem( dir_idx );
+        QList<QTreeWidgetItem*> folderRmItems;
+
+        for( int file_idx = 0; file_idx < folderItem->childCount(); file_idx++ ) {
+
+            QTreeWidgetItem* fileItem = folderItem->child( file_idx );
+            if( fileItem->checkState(0) != Qt::Checked ) {
+                continue;
             }
-        } else {
-            QString path = item->data(0, PathRole).toString();
+
+            QString path = fileItem->data(0, PathRole).toString();
             pathes.append( path );
+            folderRmItems.append( fileItem );
         }
 
-        removeItems.append( item );
+        if( folderRmItems.count() == folderItem->childCount() ) {
+            removeItems.append( folderItem );
+        } else {
+            removeItems.append( folderRmItems );
+        }
     }
 
     foreach (const QString& path, pathes) {
@@ -309,7 +335,6 @@ void ChangesWidget::createPreparedFileItem( const QString& file, const QString& 
     }
 
     QString iconPath;
-
     switch( status ) {
         case CreateStatus: iconPath = ":/plus.png" ; break;
         case ChangeStatus: iconPath = ":/edit.png" ; break;
@@ -318,7 +343,7 @@ void ChangesWidget::createPreparedFileItem( const QString& file, const QString& 
     }
 
     QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
-    fileItem->setIcon( 0, QIcon(iconPath) );
+    fileItem->setIcon( 0, joinIconsFile(file, iconPath) );
     fileItem->setData( 0, Qt::DisplayRole   , file          );
     fileItem->setData( 0, Qt::CheckStateRole, Qt::Unchecked );
     fileItem->setData( 0, PathRole          , path          );
@@ -352,10 +377,11 @@ void ChangesWidget::setupPrepared() {
 
     ui->preparedTree->header()->hide();
     ui->preparedTree->setContextMenuPolicy( Qt::CustomContextMenu );
+    ui->preparedTree->setIconSize( QSize(40, 20) );
 
-    m_preparedCtxMenu->addAction(m_preparedDiffAction);
+    m_preparedCtxMenu->addAction( m_preparedDiffAction );
     m_preparedCtxMenu->addSeparator();
-    m_preparedCtxMenu->addAction(m_preparedCancelAction);
+    m_preparedCtxMenu->addAction( m_preparedCancelAction );
     m_preparedCtxMenu->addSeparator();
     m_preparedCtxMenu->addAction( m_excludeAction );
 

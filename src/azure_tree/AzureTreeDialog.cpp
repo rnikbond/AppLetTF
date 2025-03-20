@@ -51,7 +51,7 @@ void AzureTreeDialog::expand( QTreeWidgetItem* item ) {
 
     TFRequest tf;
     tf.setConfig( m_config );
-    tf.entriesDir( path );
+    tf.entriesDir( path, false );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
@@ -120,7 +120,7 @@ void AzureTreeDialog::setConfig( const Config& cfg ) {
 
     TFRequest tf;
     tf.setConfig( m_config );
-    tf.entriesDir( "$/" );
+    tf.entriesDir( "$/", false );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {

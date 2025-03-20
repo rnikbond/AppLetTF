@@ -44,6 +44,9 @@ public:
     void setConfig( const Config& cfg );
     void reload();
 
+    void saveData   ();
+    void restoreData();
+
     bool isReloaded() const;
 
     QList<QAction*> actions() const;
@@ -84,11 +87,16 @@ private: // Detected Tree
 
 private: // Exclude Tree
 
+    QMenu      * m_excludeCtxMenu;
+    QAction    * m_includeAction;
     QStringList m_excluded;
     QMap<QString, QTreeWidgetItem*> m_excludedDirItems;
 
     void setupExcluded();
     void reloadExcluded();
+    void reactOnInclude();
+    void reactOnExcludedItemChanged( QTreeWidgetItem* item, int );
+    void reactOnExcludeMenuRequested( const QPoint& pos );
 
     void addExcludedFileItem( const QString& path );
     void createExcludedFileItem( const QString& file, const QString& path );

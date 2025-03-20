@@ -3,12 +3,16 @@
 #include <QMenu>
 #include <QAction>
 #include <QSettings>
+#include <QTextStream>
 #include <QAbstractTextDocumentLayout>
 //----------------------------------------
+#include "methods.h"
 #include "TFRequest.h"
 //----------------------------------------
 #include "ChangesWidget.h"
 #include "ui_ChangesWidget.h"
+//----------------------------------------
+#define CHANGES_FILE ".changes.dat"
 //----------------------------------------
 
 ChangesWidget::ChangesWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::ChangesWidget)
@@ -44,6 +48,41 @@ ChangesWidget::ChangesWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::Ch
 ChangesWidget::~ChangesWidget() {
 
     delete ui;
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Сохранение данных
+ */
+void ChangesWidget::saveData() {
+
+    QString path = QString("%1/%2").arg(workDirPath(), CHANGES_FILE);
+    QFile file(path);
+    if( !file.open(QIODevice::WriteOnly) ) {
+        return;
+    }
+
+    QTextStream out( &file );
+    out << m_excluded.join(";");
+    file.close();
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Восстановление данных
+ */
+void ChangesWidget::restoreData() {
+
+    QString path = QString("%1/%2").arg(workDirPath(), CHANGES_FILE);
+    QFile file(path);
+    if( !file.open(QIODevice::ReadOnly) ) {
+        return;
+    }
+
+    QString data = file.readAll();
+    file.close();
+
+    m_excluded = data.split(";");
 }
 //----------------------------------------------------------------------------------------------------------
 

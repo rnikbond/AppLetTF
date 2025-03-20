@@ -13,5 +13,8 @@
         <file>undo.png</file>
         <file>wait_edit.png</file>
         <file>message.png</file>
+        <file>edit.png</file>
+        <file>minus.png</file>
+        <file>plus.png</file>
     </qresource>
 </RCC>

@@ -182,7 +182,7 @@ void TFRequest::getDir( const QString& dir, const QString& version ) {
         dir,
         "-recursive",
         "-overwrite",
-        "-force",
+        //"-force",
         "-noprompt",
         QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
     };
@@ -309,14 +309,14 @@ void TFRequest::commit( const QString& comment, const QStringList& files ) {
  * \param dir Каталог, у которого нужно получить содержимое
  * \param isFiles Признак загрузки файлов
  */
-void TFRequest::entriesDir( const QString& dir , bool isFiles ) {
+void TFRequest::entriesDir( const QString& dir, bool isFiles ) {
 
     QStringList args = { "dir",
                         QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
                         QString("-collection:%1").arg(m_config.m_azure.url),
                         dir };
 
-    if( isFiles ) {
+    if( !isFiles ) {
         args.append( "-folders" );
     }
 

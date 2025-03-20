@@ -115,7 +115,14 @@ void AppLetTF::reactOnTray( QSystemTrayIcon::ActivationReason reason ) {
     Q_UNUSED( reason );
 
     switch (reason){
-        case QSystemTrayIcon::Trigger:setVisible( !isVisible() ); break;
+        case QSystemTrayIcon::Trigger: {
+            bool newState = !isVisible();
+            setVisible( newState );
+            if( newState ) {
+                raise();
+            }
+            break;
+        }
         default: break;
     }
 }
@@ -175,6 +182,8 @@ void AppLetTF::init() {
 
     ui->projectsTree->setConfig( m_config );
     ui->changes     ->setConfig( m_config );
+
+    ui->changes->restoreData();
 
     showProjects();
 }
@@ -292,6 +301,7 @@ void AppLetTF::setupUI() {
 void AppLetTF::closeEvent( QCloseEvent* event ) {
 
     m_config.save( geometry() );
+    ui->changes->saveData();
 
     if( !m_config.m_tray ) {
         QMainWindow::closeEvent( event );
