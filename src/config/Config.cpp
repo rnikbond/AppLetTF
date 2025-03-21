@@ -13,6 +13,10 @@
 #define CONF_VERSION 1
 #define CONF_PROP_VERSION "version"
 
+#define CONF_GROUP_WINDOW "window"
+    #define CONF_PROP_LOG     "log"
+    #define CONF_PROP_TOOLBAR "toolbar"
+
 #define CONF_GROUP_COMMON "common"
     #define CONF_PROP_TRAY "tray"
 
@@ -37,8 +41,11 @@ Config::Config() { }
 
 Config::Config( const Config& other ) {
 
-    m_path = other.m_path;
-    m_tray = other.m_tray;
+    m_path      = other.m_path     ;
+    m_tray      = other.m_tray     ;
+    m_isLog     = other.m_isLog    ;
+    m_isToolBar = other.m_isToolBar;
+    m_geometry = other.m_geometry  ;
 
     m_azure.tfPath     = other.m_azure.tfPath    ;
     m_azure.diffCmd    = other.m_azure.diffCmd   ;
@@ -66,7 +73,7 @@ void Config::init( const QString& path ) {
  * \brief Сохранение конфигурации
  * \param geometry Геометрия основного окна
  */
-void Config::save( QRect geometry ) {
+void Config::save( QRect geometry , bool isLog, bool isMaximize ) {
 
     QStringList workfolds;
     foreach( const QString& azurePath, m_azure.workfoldes.keys() ) {
@@ -85,6 +92,15 @@ void Config::save( QRect geometry ) {
     conf.setValue( CONF_PROP_AZURE_WORKFOLDS, workfolds         );
     conf.setValue( CONF_PROP_AZURE_LOGIN    , m_azure.login     );
     conf.setValue( CONF_PROP_AZURE_PASSWORD , m_azure.password  );
+    conf.endGroup();
+
+    conf.beginGroup( CONF_GROUP_COMMON );
+    conf.setValue( CONF_PROP_TRAY, m_tray );
+    conf.endGroup();
+
+    conf.beginGroup( CONF_GROUP_WINDOW );
+    conf.setValue( CONF_PROP_LOG    , isLog      );
+    conf.setValue( CONF_PROP_TOOLBAR, isMaximize );
     conf.endGroup();
 
     conf.beginGroup( CONF_GROUP_COMMON );
@@ -127,6 +143,11 @@ void Config::restore() {
 
     conf.beginGroup( CONF_GROUP_COMMON );
     m_tray = conf.value( CONF_PROP_TRAY, false ).toBool();
+    conf.endGroup();
+
+    conf.beginGroup( CONF_GROUP_WINDOW );
+    m_isLog     = conf.value( CONF_PROP_LOG    , true).toBool();
+    m_isToolBar = conf.value( CONF_PROP_TOOLBAR, true).toBool();
     conf.endGroup();
 
     conf.beginGroup( CONF_GROUP_GEOMETRY );
@@ -180,8 +201,11 @@ bool Config::isIncomplete() const {
 
 void Config::operator = ( const Config& other ) {
 
-    m_path = other.m_path;
-    m_tray = other.m_tray;
+    m_path      = other.m_path     ;
+    m_tray      = other.m_tray     ;
+    m_isLog     = other.m_isLog    ;
+    m_isToolBar = other.m_isToolBar;
+    m_geometry = other.m_geometry  ;
 
     m_azure.tfPath     = other.m_azure.tfPath    ;
     m_azure.diffCmd    = other.m_azure.diffCmd   ;

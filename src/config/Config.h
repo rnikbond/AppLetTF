@@ -32,6 +32,8 @@ public:
     QString m_path;
 
     QRect       m_geometry;
+    bool        m_isLog;
+    bool        m_isToolBar;
     bool        m_tray;
     AzureDevOps m_azure;
 
@@ -43,7 +45,7 @@ public:
 
     bool isIncomplete() const;
 
-    void save   ( QRect geometry = QRect() );
+    void save   ( QRect geometry = QRect(), bool isLog = true, bool isMaximize = true );
     void restore();
 
 public:

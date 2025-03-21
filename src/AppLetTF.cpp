@@ -3,6 +3,7 @@
 #include <QMenu>
 #include <QDebug>
 #include <QScreen>
+#include <QTextBlock>
 #include <QCloseEvent>
 #include <QMessageBox>
 //----------------------------------------
@@ -23,7 +24,8 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupTray   ();
     setupArgs   ();
 
-    m_logAction->setChecked( true );
+    m_logAction     ->setChecked( true );
+    m_maximizeAction->setChecked( true );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -91,11 +93,13 @@ void AppLetTF::reloadActions() {
     ui->toolBar->addAction ( m_projectsAction );
     ui->toolBar->addAction ( m_changesAction  );
     ui->toolBar->addSeparator();
-    ui->toolBar->addActions( actions );
-    ui->toolBar->addWidget ( stretchWidget());
+    ui->toolBar->addActions( actions          );
+    ui->toolBar->addWidget ( stretchWidget()  );
+    ui->toolBar->addSeparator();
+    ui->toolBar->addAction ( m_settingsAction );
     ui->toolBar->addSeparator();
     ui->toolBar->addAction ( m_logAction      );
-    ui->toolBar->addAction ( m_settingsAction );
+    ui->toolBar->addAction ( m_maximizeAction );
 
     QLayout* toolBarLayout = ui->toolBar->layout();
     for(int i = 0; i < toolBarLayout->count(); ++i) {
@@ -150,9 +154,35 @@ void AppLetTF::changeSettings() {
 }
 //----------------------------------------------------------------------------------------------------------
 
-void AppLetTF::changeOutput() {
+/*!
+ * \brief Изменение видимости вывода сообщений
+ * \param state Признак видимости
+ */
+void AppLetTF::changeOutput( bool state ) {
 
-    ui->logEdit->setVisible( m_logAction->isChecked() );
+    m_logAction->blockSignals( true );
+    m_logAction->setChecked( state );
+    m_logAction->blockSignals( false );
+
+    ui->logEdit->setVisible( state );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Изменение видимости текста на панели инструментов
+ * \param state Признак видимости
+ */
+void AppLetTF::changeToolBarText( bool state ) {
+
+    m_maximizeAction->blockSignals( true );
+    m_maximizeAction->setChecked( state );
+    m_maximizeAction->blockSignals( false );
+
+    if( state ) {
+        ui->toolBar->setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
+    } else {
+        ui->toolBar->setToolButtonStyle( Qt::ToolButtonIconOnly );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -179,6 +209,9 @@ void AppLetTF::init() {
         }
     }
 
+    changeOutput     ( m_config.m_isLog     );
+    changeToolBarText( m_config.m_isToolBar );
+
     ui->projectsTree->setConfig( m_config );
     ui->changes     ->setConfig( m_config );
 
@@ -195,27 +228,31 @@ void AppLetTF::setupActions() {
 
     QActionGroup* tabsActionGroup = new QActionGroup( this );
 
-    m_projectsAction = new QAction( tr("Проекты"  ) );
-    m_changesAction  = new QAction( tr("Изменения") );
-    m_settingsAction = new QAction( tr("Настройки") );
-    m_logAction      = new QAction( tr("Вывод"    ) );
+    m_projectsAction = new QAction( tr("Проекты"       ) );
+    m_changesAction  = new QAction( tr("Изменения"     ) );
+    m_settingsAction = new QAction( tr("Настройки"     ) );
+    m_logAction      = new QAction( tr("Вывод"         ) );
+    m_maximizeAction = new QAction( tr("Подробный вид" ) );
 
     m_projectsAction->setIcon( QIcon(":/project_tree.png") );
     m_changesAction ->setIcon( QIcon(":/wait_edit.png"   ) );
     m_settingsAction->setIcon( QIcon(":/settings.png"    ) );
     m_logAction     ->setIcon( QIcon(":/message.png"     ) );
+    m_maximizeAction->setIcon( QIcon(":/maximize.png"    ) );
 
     m_projectsAction->setCheckable( true );
     m_changesAction ->setCheckable( true );
     m_logAction     ->setCheckable( true );
+    m_maximizeAction->setCheckable( true );
 
     tabsActionGroup->addAction( m_projectsAction );
     tabsActionGroup->addAction( m_changesAction  );
 
-    connect( m_projectsAction, &QAction::triggered, this, &AppLetTF::showProjects   );
-    connect( m_changesAction , &QAction::triggered, this, &AppLetTF::showChanges    );
-    connect( m_settingsAction, &QAction::triggered, this, &AppLetTF::changeSettings );
-    connect( m_logAction     , &QAction::triggered, this, &AppLetTF::changeOutput   );
+    connect( m_projectsAction, &QAction::triggered, this, &AppLetTF::showProjects     );
+    connect( m_changesAction , &QAction::triggered, this, &AppLetTF::showChanges       );
+    connect( m_settingsAction, &QAction::triggered, this, &AppLetTF::changeSettings    );
+    connect( m_logAction     , &QAction::triggered, this, &AppLetTF::changeOutput      );
+    connect( m_maximizeAction, &QAction::triggered, this, &AppLetTF::changeToolBarText );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -299,7 +336,7 @@ void AppLetTF::setupUI() {
  */
 void AppLetTF::closeEvent( QCloseEvent* event ) {
 
-    m_config.save( geometry() );
+    m_config.save( geometry(), m_logAction->isChecked(), m_maximizeAction->isChecked() );
     ui->changes->saveData();
 
     if( !m_config.m_tray ) {
@@ -326,6 +363,14 @@ void AppLetTF::closeEvent( QCloseEvent* event ) {
  * \param response Список значений из ответа, если нет ошибки
  */
 void AppLetTF::appendOutput( bool isErr, int code, const QString& err, const QStringList& response ) {
+
+    int lines = 0;
+    for( int idx = 0; idx < ui->logEdit->document()->blockCount(); idx++ ) {
+        lines += ui->logEdit->document()->findBlock(idx).length();
+    }
+    if( lines > 3000 ) {
+        ui->logEdit->clear();
+    }
 
     ui->logEdit->append("");
     ui->logEdit->append( QTime::currentTime().toString("hh:mm:ss.zzz") );

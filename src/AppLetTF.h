@@ -47,6 +47,7 @@ private: // Actions
     QAction* m_changesAction ;
     QAction* m_settingsAction;
     QAction* m_logAction     ;
+    QAction* m_maximizeAction;
 
     void setupActions();
 
@@ -62,7 +63,8 @@ private: // UI
     void showChanges  ();
     void reloadActions();
 
-    void changeOutput();
+    void changeOutput( bool state );
+    void changeToolBarText( bool state );
 
 protected:
 

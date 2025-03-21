@@ -17,5 +17,6 @@
         <file>minus.png</file>
         <file>plus.png</file>
         <file>view.png</file>
+        <file>maximize.png</file>
     </qresource>
 </RCC>
