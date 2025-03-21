@@ -4,6 +4,7 @@
 //----------------------------------------
 #include <QPixmap>
 #include <QStringList>
+#include <QTreeWidgetItem>
 //----------------------------------------
 #include "common.h"
 //----------------------------------------
@@ -25,6 +26,9 @@ QPixmap joinIconsFile( const QString& fileName, const QString& iconPath );
 void createWorkDir();
 QString workDirPath();
 QString workDirName();
+
+void createTreeSubDirs( QTreeWidgetItem* parent, int pathRole, QStringList& pathDirs, int idxFrom );
+void collectPathFiles( const QTreeWidgetItem* item, int role, QStringList& collection );
 
 #endif // METHODS_H
 //----------------------------------------

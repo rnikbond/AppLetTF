@@ -4,6 +4,7 @@
 #include <QAction>
 #include <QSettings>
 #include <QTextStream>
+#include <QMessageBox>
 #include <QAbstractTextDocumentLayout>
 //----------------------------------------
 #include "methods.h"
@@ -29,15 +30,15 @@ ChangesWidget::ChangesWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::Ch
 
 #ifdef WIN32
     m_statusesTfsMap = {
-        { tr("добавление"), CreateStatus },
-        { tr("изменить"  ), ChangeStatus },
-        { tr("удалить"   ), DeleteStatus },
+        { tr("добавление"), StatusNew    },
+        { tr("изменить"  ), StatusEdit   },
+        { tr("удалить"   ), StatusDelete },
     };
 #else
     m_statusesTfsMap = {
-        { tr("add"   ), CreateStatus },
-        { tr("edit"  ), ChangeStatus },
-        { tr("delete"), DeleteStatus },
+        { tr("add"   ), StatusNew    },
+        { tr("edit"  ), StatusEdit   },
+        { tr("delete"), StatusDelete },
     };
 #endif
 
@@ -95,8 +96,36 @@ QList<QAction*> ChangesWidget::actions() const {
     return {
              m_preparedDiffAction  ,
              m_preparedCancelAction,
+             m_excludeAction       ,
              m_reloadAction        ,
             };
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Отображение MessageBox с вопросом
+ * \param caption Заголовок
+ * \param text    Текст
+ * \param detail  Детали
+ * \return TRUE, если пользователь нажал "Да". Иначе FALSE.
+ */
+bool ChangesWidget::question( const QString& caption, const QString& text, const QString& detail ) const {
+
+    QMessageBox messageBox( QMessageBox::Question, caption, text, QMessageBox::Yes | QMessageBox::No );
+    messageBox.setDefaultButton( QMessageBox::No );
+
+    if( !detail.isEmpty() ) {
+        messageBox.setDetailedText(detail);
+        // Раскрытие детальной инфомарции
+        foreach( QAbstractButton *button, messageBox.buttons() ) {
+            if (messageBox.buttonRole(button) == QMessageBox::ActionRole) {
+                button->click();
+                break;
+            }
+        }
+    }
+
+    return (messageBox.exec() == QMessageBox::Yes);
 }
 //----------------------------------------------------------------------------------------------------------
 

@@ -91,7 +91,7 @@ QList<AzureItem> parseEntries( const QStringList& entries ) {
         QString name = entries.at(i);
 
         AzureItem item;
-        item.type   = name.contains("$") ? Folder : File;
+        item.type   = name.contains("$") ? TypeFolder : TypeFile;
         item.name   = name.remove("$");
         item.folder = folder;
 
@@ -339,7 +339,7 @@ void splitPath( const QString& path, QString& folder, QString& file ) {
  */
 QPixmap icon( const QString& name , int fileType ) {
 
-    if( fileType == Folder ) {
+    if( fileType == TypeFolder ) {
         return QPixmap(":/folder.png");
     }
 
@@ -380,7 +380,7 @@ QPixmap joinIconsFile( const QString& fileName, const QString& iconPath ) {
     QSize iconSize = QSize( 64, 64 );
 
     QPixmap pixmapLeft  = QPixmap(iconPath).scaled(iconSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    QPixmap pixmapRight = icon(fileName, File);
+    QPixmap pixmapRight = icon(fileName, TypeFile);
     QPixmap pixmapMix  ( iconSize.width() * 2 + spacing, iconSize.height() );
 
     pixmapMix.fill( Qt::transparent );
@@ -424,4 +424,57 @@ void createWorkDir() {
 }
 //----------------------------------------------------------------------------------------------------------
 
+/*!
+ * \brief Создание структуры каталогов
+ * \param parent Указатель на родительский узел
+ * \param role Роль, по которой можно получить у родителя полный путь и по которой нужно установить путь для нового узла
+ * \param pathDirs Список каталогов
+ * \param idxFrom Индекс, с которого нужно начинать просмотривать каталог
+ */
+void createTreeSubDirs( QTreeWidgetItem* parent, int role, QStringList& pathDirs, int idxFrom ) {
 
+    for( int idx = idxFrom; idx < pathDirs.count(); idx++ ) {
+
+        QString pathDir = pathDirs[idx];
+
+        QString parentPath = parent->data(0, role).toString();
+        if( !pathDir.startsWith(parentPath) ) {
+            continue;
+        }
+
+        QTreeWidgetItem* item = new QTreeWidgetItem( parent );
+        item->setData( 0, role, pathDir );
+        item->setText( 0, pathDir.remove(parentPath + "/") );
+
+        pathDirs.removeAt( idx );
+        createTreeSubDirs( item, role, pathDirs, idx );
+        idx--;
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение списка путей к файлу, включая дочерние узлы
+ * \param[in] item Элемент дерева
+ * \param[in] role Роль, по которой можно получить путь
+ * \param[out] collection Коллекция для записи путей
+ */
+void collectPathFiles( const QTreeWidgetItem* item, int role, QStringList& collection ) {
+
+    if( item->data(0, TypeRole).toInt() == TypeFile ) {
+        collection.append( item->data(0, role).toString() );
+    }
+
+    for( int idx = 0; idx < item->childCount(); idx++ ) {
+
+        QTreeWidgetItem* childItem = item->child( idx );
+        if( childItem->data(0, TypeRole).toInt() == TypeFile ) {
+            collection.append( childItem->data(0, role).toString() );
+        }
+
+        collectPathFiles( childItem, role, collection );
+    }
+
+    collection.removeDuplicates();
+}
+//----------------------------------------------------------------------------------------------------------

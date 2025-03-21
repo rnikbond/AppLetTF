@@ -97,7 +97,6 @@ void AppLetTF::reloadActions() {
     ui->toolBar->addAction ( m_logAction      );
     ui->toolBar->addAction ( m_settingsAction );
 
-    ui->toolBar->setStyleSheet( "width: 100%;" );
     QLayout* toolBarLayout = ui->toolBar->layout();
     for(int i = 0; i < toolBarLayout->count(); ++i) {
         QLayoutItem* item = toolBarLayout->itemAt(i);

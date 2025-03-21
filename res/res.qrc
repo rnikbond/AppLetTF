@@ -16,5 +16,6 @@
         <file>edit.png</file>
         <file>minus.png</file>
         <file>plus.png</file>
+        <file>view.png</file>
     </qresource>
 </RCC>

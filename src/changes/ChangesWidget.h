@@ -19,18 +19,6 @@ class ChangesWidget : public QWidget {
 
     Q_OBJECT
 
-    enum CustomRoles {
-        PathRole   = Qt::UserRole + 1,
-        StatusRole = Qt::UserRole + 2,
-    };
-
-    enum FileStatuses {
-        UnknownStatus,
-        CreateStatus,
-        ChangeStatus,
-        DeleteStatus,
-    };
-
     bool m_reloadState;
     Config m_config;
     QAction* m_reloadAction;
@@ -51,6 +39,8 @@ public:
 
     QList<QAction*> actions() const;
 
+    bool question( const QString& caption, const QString& text, const QString& detail = "" ) const;
+
 private: // Prepared Tree
 
     QMenu      * m_preparedCtxMenu     ;
@@ -63,14 +53,13 @@ private: // Prepared Tree
     void reloadPrepared();
 
     void reactOnCommit();
-    void reactOnPreparedItemChanged( QTreeWidgetItem* item, int );
     void reactOnPreparedMenuRequested( const QPoint& pos );
     void reactOnPreparedDiff();
     void reactOnPreparedCancel();
     void reactOnPreparedExclude();
 
-    void createPreparedFileItem( const QString& file, const QString& path, int status );
     void updateCommitSize();
+    void updatePreparedActions();
 
 private: // Detected Tree
 
@@ -85,6 +74,8 @@ private: // Detected Tree
 
     void createDetectedFileItem( const QString& file, const QString& path, int status );
 
+    void updateDetectedActions();
+
 private: // Exclude Tree
 
     QMenu      * m_excludeCtxMenu;
@@ -95,11 +86,11 @@ private: // Exclude Tree
     void setupExcluded();
     void reloadExcluded();
     void reactOnInclude();
-    void reactOnExcludedItemChanged( QTreeWidgetItem* item, int );
     void reactOnExcludeMenuRequested( const QPoint& pos );
 
     void addExcludedFileItem( const QString& path );
-    void createExcludedFileItem( const QString& file, const QString& path );
+
+    void updateExcludeActions();
 
 private:
 

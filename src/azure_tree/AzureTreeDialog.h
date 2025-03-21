@@ -17,11 +17,6 @@ class AzureTreeDialog : public QDialog {
 
     Q_OBJECT
 
-    enum CustomRoles {
-        LoadedRole = Qt::UserRole + 1,
-        AzurePathRole
-    };
-
     Config m_config;
     QMap<QString, QTreeWidgetItem*> m_treeItems;
 

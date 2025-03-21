@@ -120,10 +120,10 @@ void HistoryDetailWidget::reload( const QString& path, const QString& version ) 
         QTableWidgetItem* statusItem = new QTableWidgetItem;
         QTableWidgetItem* folderItem = new QTableWidgetItem;
 
-        fileItem  ->setIcon( icon(fileName, File) );
+        fileItem  ->setIcon( icon(fileName, TypeFile) );
         fileItem  ->setText( fileName    );
         statusItem->setText( file.status );
-        folderItem->setIcon( icon(fileName, Folder) );
+        folderItem->setIcon( icon(fileName, TypeFolder) );
         folderItem->setText( folder      );
 
         ui->filesTable->insertRow( row );

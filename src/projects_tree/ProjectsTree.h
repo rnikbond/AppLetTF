@@ -21,13 +21,6 @@ class ProjectsTree : public QWidget {
 
     Q_OBJECT
 
-    enum CustomRoles {
-        LoadRole    = Qt::UserRole + 1, ///< Признак закгрузки содержимого
-        ItemTypeRole ,                  ///< Тип элемента
-        TFSPathRole  ,                  ///< Путь к элементу в tfs
-        LocalPathRole,                  ///< Путь к элементу на диске
-    };
-
     QMenu  * m_ctxMenu           ;
     QAction* m_reloadAction      ;
     QAction* m_historyAction     ;
@@ -63,6 +56,7 @@ private:
     HistoryWidget* historyTab( const QString& path );
     void closeHistoryTab( int index );
 
+    void updateActions();
     void showCtxMenu( const QPoint& pos );
 
 private:

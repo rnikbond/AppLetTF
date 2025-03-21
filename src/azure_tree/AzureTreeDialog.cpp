@@ -84,7 +84,7 @@ void AzureTreeDialog::createTreeItems( QTreeWidgetItem* parent, const QList<Azur
         newItem->setIcon( 0, icon(entry.name, entry.type) );
         newItem->setData( 0, AzurePathRole  , path );
 
-        if( entry.type == Folder ) {
+        if( entry.type == TypeFolder ) {
             newItem->setChildIndicatorPolicy( QTreeWidgetItem::ShowIndicator );
         }
 

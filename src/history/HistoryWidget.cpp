@@ -146,7 +146,7 @@ void HistoryWidget::showCtxMenu( const QPoint& pos ) {
  */
 void HistoryWidget::setupActions() {
 
-    m_detailAction = new QAction( QIcon(""), tr("Посмотреть детали") );
+    m_detailAction = new QAction( QIcon(":/view.png"), tr("Посмотреть детали") );
     connect( m_detailAction, &QAction::triggered, this, &HistoryWidget::showDetail );
 }
 //----------------------------------------------------------------------------------------------------------

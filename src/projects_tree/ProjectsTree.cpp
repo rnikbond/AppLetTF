@@ -32,8 +32,9 @@ ProjectsTree::ProjectsTree(QWidget *parent) : QWidget(parent) , ui(new Ui::Proje
 
     connect( ui->projectsTree, &QTreeWidget::itemDoubleClicked         , this, QOverload<QTreeWidgetItem*,int>::of(&ProjectsTree::expand)         );
     connect( ui->projectsTree, &QTreeWidget::itemExpanded              , this, QOverload<QTreeWidgetItem*    >::of(&ProjectsTree::expand)         );
+    connect( ui->projectsTree, &QTreeWidget::currentItemChanged        , this,                                     &ProjectsTree::updateActions   );
     connect( ui->projectsTree, &QTreeWidget::customContextMenuRequested, this,                                     &ProjectsTree::showCtxMenu     );
-    connect( ui->historyTab  , &QTabWidget::tabCloseRequested          , this,                                     &ProjectsTree::closeHistoryTab );
+    connect( ui->historyTab  , &QTabWidget ::tabCloseRequested         , this,                                     &ProjectsTree::closeHistoryTab );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -50,8 +51,8 @@ QList<QAction*> ProjectsTree::actions() const {
 
     return {
              m_cloneLastedAction,
-             m_historyAction     ,
-             m_reloadAction      ,
+             m_historyAction    ,
+             m_reloadAction     ,
            };
 }
 //----------------------------------------------------------------------------------------------------------
@@ -66,7 +67,7 @@ void ProjectsTree::history() {
         return;
     }
 
-    QString path = item->data(0, TFSPathRole).toString() ;
+    QString path = item->data(0, AzurePathRole).toString() ;
 
     HistoryWidget* historyWidget = historyTab( path );
     historyWidget->reload( path );
@@ -86,7 +87,7 @@ void ProjectsTree::cloneLasted() {
         return;
     }
 
-    QString path = item->data(0, TFSPathRole).toString() ;
+    QString path = item->data(0, AzurePathRole).toString() ;
 
     TFRequest tf;
     tf.setConfig( m_config );
@@ -109,7 +110,7 @@ void ProjectsTree::cloneCertain() {
         return;
     }
 
-    QString path = item->data(0, TFSPathRole).toString();
+    QString path = item->data(0, AzurePathRole).toString();
 
     TFRequest tf;
     tf.setConfig( m_config );
@@ -161,14 +162,14 @@ void ProjectsTree::reload() {
     { // Сохранение состояния дерева
         QTreeWidgetItem* currentItem = ui->projectsTree->currentItem();
         if( currentItem != nullptr ) {
-            currentPath = currentItem->data(0, TFSPathRole).toString();
+            currentPath = currentItem->data(0, AzurePathRole).toString();
         }
 
         QTreeWidgetItemIterator itemIt( ui->projectsTree, QTreeWidgetItemIterator::All );
         while( *itemIt ) {
           QTreeWidgetItem* item = *itemIt;
           if( item->isExpanded() ) {
-              expandPathes.append( item->data(0, TFSPathRole).toString() );
+              expandPathes.append( item->data(0, AzurePathRole).toString() );
           }
           itemIt++;
         }
@@ -198,7 +199,7 @@ void ProjectsTree::reload() {
 
           QTreeWidgetItem* item = *itemIt;
 
-          QString path = item->data(0, TFSPathRole).toString();
+          QString path = item->data(0, AzurePathRole).toString();
           if( expandPathes.contains(path) ) {
               expandPathes.removeOne( path );
               item->setExpanded( true );
@@ -214,6 +215,8 @@ void ProjectsTree::reload() {
             }
         }
     }
+
+    updateActions();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -248,15 +251,15 @@ void ProjectsTree::expand( QTreeWidgetItem* item, int ) {
  */
 void ProjectsTree::expand( QTreeWidgetItem* item ) {
 
-    if( item->data(0, ItemTypeRole).toInt() != Folder ) {
+    if( item->data(0, TypeRole).toInt() != TypeFolder ) {
         return;
     }
 
-    if( item->data(0, LoadRole).isValid() ) {
+    if( item->data(0, LoadedRole).isValid() ) {
         return;
     }
 
-    QString path = item->data(0, TFSPathRole).toString();
+    QString path = item->data(0, AzurePathRole).toString();
 
     TFRequest tf;
     tf.setConfig( m_config );
@@ -271,7 +274,7 @@ void ProjectsTree::expand( QTreeWidgetItem* item ) {
     QList<AzureItem> entries = parseEntries( tf.m_response );
     createTreeItems( item, entries );
 
-    item->setData( 0, LoadRole, true );
+    item->setData( 0, LoadedRole, true );
     item->setChildIndicatorPolicy( QTreeWidgetItem::DontShowIndicatorWhenChildless );
 }
 //----------------------------------------------------------------------------------------------------------
@@ -289,12 +292,12 @@ void ProjectsTree::createTreeItems( QTreeWidgetItem* parent, const QList<AzureIt
 
         QString path = entry.folder + "/" + entry.name;
         QTreeWidgetItem* newItem = new QTreeWidgetItem;
-        newItem->setText( 0, entry.name       );
+        newItem->setText( 0, entry.name                   );
         newItem->setIcon( 0, icon(entry.name, entry.type) );
-        newItem->setData( 0, ItemTypeRole, entry.type );
-        newItem->setData( 0, TFSPathRole , path );
+        newItem->setData( 0, TypeRole       , entry.type  );
+        newItem->setData( 0, AzurePathRole  , path        );
 
-        if( entry.type == Folder ) {
+        if( entry.type == TypeFolder ) {
             newItem->setChildIndicatorPolicy( QTreeWidgetItem::ShowIndicator );
         }
 
@@ -376,6 +379,26 @@ void ProjectsTree::closeHistoryTab( int index ) {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Обновление состояния действий
+ */
+void ProjectsTree::updateActions() {
+
+    m_cloneLastedAction ->setEnabled( false );
+    m_cloneСertainAction->setEnabled( false );
+    m_historyAction     ->setEnabled( false );
+
+    QTreeWidgetItem* item = ui->projectsTree->currentItem();
+    if( item == nullptr ) {
+        return;
+    }
+
+    m_cloneLastedAction ->setEnabled( true );
+    m_cloneСertainAction->setEnabled( true );
+    m_historyAction     ->setEnabled( true );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Отображение контекстного меню
  * \param pos Позиция для отображения
  */
@@ -422,7 +445,7 @@ void ProjectsTree::setupCtxMenu() {
     m_ctxMenu->addAction( m_cloneLastedAction  );
     m_ctxMenu->addAction( m_cloneСertainAction );
     m_ctxMenu->addSeparator();
-    m_ctxMenu->addAction( m_historyAction );
+    m_ctxMenu->addAction( m_historyAction    );
     m_ctxMenu->addSeparator();
     m_ctxMenu->addAction( m_reloadAction );
 }

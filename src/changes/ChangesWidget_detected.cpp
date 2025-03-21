@@ -5,6 +5,7 @@
 #include <QToolButton>
 #include <QMessageBox>
 //----------------------------------------
+#include "common.h"
 #include "TFRequest.h"
 //----------------------------------------
 #include "ChangesWidget.h"
@@ -21,14 +22,14 @@ void ChangesWidget::reactOnDetectedApply() {
         return;
     }
 
-    QString path = item->data(0, PathRole).toString();
-    int status   = item->data(0, StatusRole).toInt();
+    QString path = item->data(0, LocalPathRole).toString();
+    int status   = item->data(0, StatusRole   ).toInt();
 
     TFRequest tf;
     tf.setConfig( m_config );
     switch( status ) {
-        case CreateStatus: tf.add   ({path}); break;
-        case DeleteStatus: tf.remove({path}); break;
+        case StatusNew   : tf.add   ({path}); break;
+        case StatusDelete: tf.remove({path}); break;
         default          : return;
     }
 
@@ -98,7 +99,7 @@ void ChangesWidget::reloadDetected() {
 
     foreach( const QString& item, detectedChanges ) {
 
-        int status = UnknownStatus;
+        int status = StatusNone;
         QStringList parts;
 
         foreach( const QString& caption, m_statusesTfsMap.keys()) {
@@ -111,7 +112,7 @@ void ChangesWidget::reloadDetected() {
             break;
         }
 
-        if( status == UnknownStatus ) {
+        if( status == StatusNone ) {
             continue;
         }
 
@@ -158,17 +159,33 @@ void ChangesWidget::createDetectedFileItem( const QString& file, const QString& 
     QString iconPath;
 
     switch( status ) {
-        case CreateStatus: iconPath = ":/plus.png" ; break;
-        case ChangeStatus: iconPath = ":/edit.png" ; break;
-        case DeleteStatus: iconPath = ":/minus.png"; break;
+        case StatusNew   : iconPath = ":/plus.png" ; break;
+        case StatusEdit  : iconPath = ":/edit.png" ; break;
+        case StatusDelete: iconPath = ":/minus.png"; break;
         default          : break;
     }
 
     QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
     fileItem->setIcon( 0, QIcon(iconPath)         );
     fileItem->setData( 0, Qt::DisplayRole, file   );
-    fileItem->setData( 0, PathRole       , path   );
+    fileItem->setData( 0, LocalPathRole  , path   );
     fileItem->setData( 0, StatusRole     , status );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Обновление действий в дереве обнаруженных изменений
+ */
+void ChangesWidget::updateDetectedActions() {
+
+    m_detectedApplyAction->setEnabled( false );
+
+    QTreeWidgetItem* currentItem = ui->detectedTree->currentItem();
+    if( currentItem == nullptr ) {
+        return;
+    }
+
+    m_detectedApplyAction->setEnabled( true );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -187,7 +204,8 @@ void ChangesWidget::setupDetected() {
 
     m_detectedCtxMenu->addAction(m_detectedApplyAction);
 
-    connect( m_detectedApplyAction, &QAction    ::triggered                , this, &ChangesWidget::reactOnDetectedApply         );
-    connect( ui->detectedTree    , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnDetectedMenuRequested );
+    connect( m_detectedApplyAction, &QAction    ::triggered                 , this, &ChangesWidget::reactOnDetectedApply         );
+    connect( ui->detectedTree     , &QTreeWidget::currentItemChanged        , this, &ChangesWidget::updateDetectedActions        );
+    connect( ui->detectedTree     , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnDetectedMenuRequested );
 }
 //----------------------------------------------------------------------------------------------------------

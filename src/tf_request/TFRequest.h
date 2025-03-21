@@ -56,6 +56,8 @@ public: // Requests
     void getDir( const QString& dir, const QString& version = "" );
     void entriesDir( const QString& dir, bool isFiles = true );
 
+    void view( const QString& file, const QString& version = "" );
+
     void status( const QString& path );
     void add( const QStringList& files );
     void remove( const QStringList& files );

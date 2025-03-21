@@ -1,6 +1,7 @@
 //----------------------------------------
 #include <QDir>
 #include <QMenu>
+#include <QDebug>
 #include <QAction>
 #include <QToolButton>
 #include <QMessageBox>
@@ -21,19 +22,14 @@ void ChangesWidget::reactOnCommit() {
     QString     comment = ui->commentEdit->toPlainText();
     QStringList changeFiles;
 
-    for( int dir_idx = 0; dir_idx < ui->preparedTree->topLevelItemCount(); dir_idx++ ) {
-
-        QTreeWidgetItem* dirItem = ui->preparedTree->topLevelItem( dir_idx );
-        for( int file_idx = 0; file_idx < dirItem->childCount(); file_idx++ ) {
-
-            QTreeWidgetItem* fileItem = dirItem->child( file_idx );
-            if( fileItem->checkState(0) != Qt::Checked ) {
-                continue;
-            }
-
-            QString path = fileItem->data(0, PathRole).toString();
+    QTreeWidgetItemIterator itemIt( ui->preparedTree, QTreeWidgetItemIterator::All );
+    while( *itemIt ) {
+        QTreeWidgetItem* item = *itemIt;
+        if( item->childCount() == 0 ) {
+            QString path = item->data(0, LocalPathRole).toString();
             changeFiles.append( path );
         }
+        itemIt++;
     }
 
     if( changeFiles.isEmpty() ) {
@@ -61,10 +57,16 @@ void ChangesWidget::reactOnPreparedDiff() {
 
     QTreeWidgetItem* item = ui->preparedTree->currentItem();
     if( item == nullptr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбран файл для сравнения") );
         return;
     }
 
-    QString path = item->data(0, PathRole).toString();
+    if( item->data(0, TypeRole).toInt() != TypeFile ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбран файл для сравнения") );
+        return;
+    }
+
+    QString path = item->data(0, LocalPathRole).toString();
 
     TFRequest tf;
     tf.setConfig( m_config );
@@ -83,49 +85,33 @@ void ChangesWidget::reactOnPreparedDiff() {
  */
 void ChangesWidget::reactOnPreparedCancel() {
 
-    QStringList undoPathes;
-    QStringList undoNames;
-
-    for( int dir_idx = 0; dir_idx < ui->preparedTree->topLevelItemCount(); dir_idx++ ) {
-
-        QTreeWidgetItem* dirItem = ui->preparedTree->topLevelItem( dir_idx );
-        for( int file_idx = 0; file_idx < dirItem->childCount(); file_idx++ ) {
-
-            QTreeWidgetItem* fileItem = dirItem->child( file_idx );
-            if( fileItem->checkState(0) != Qt::Checked ) {
-                continue;
-            }
-
-            QString path = fileItem->data(0, PathRole).toString();
-            undoPathes.append( path );
-            undoNames.append( fileItem->text(0) );
-        }
-    }
-
-    if( undoPathes.isEmpty() ) {
+    QTreeWidgetItem* currentItem = ui->preparedTree->currentItem();
+    if( currentItem == nullptr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбран элемент") );
         return;
     }
 
-    QMessageBox messageBox( QMessageBox::Question,
-                           tr("Отмена изменений"),
-                           tr("Отменить изменения в этих файлах?"),
-                           QMessageBox::Yes | QMessageBox::No );
-    messageBox.setDetailedText(undoNames.join("\n"));
-    messageBox.setDefaultButton( QMessageBox::No );
-    foreach( QAbstractButton *button, messageBox.buttons() ) {
-        if (messageBox.buttonRole(button) == QMessageBox::ActionRole) {
-            button->click();
-            break;
-        }
+    QStringList undoPathes;
+    collectPathFiles( currentItem, LocalPathRole, undoPathes );
+    if( undoPathes.isEmpty() ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбраны элементы для отмены изменений") );
+        return;
     }
 
-    if( messageBox.exec() != QMessageBox::Yes ) {
+    QStringList undoNames;
+    foreach( const QString& path,  undoPathes) {
+        int idx = path.lastIndexOf('/');
+        undoNames.append( path.mid(idx + 1, path.length() - idx) );
+    }
+
+    bool isOk = question( tr("Отмена изменений"), tr("Отменить изменения в этих файлах?"), undoNames.join('\n') );
+    if( !isOk ) {
         return;
     }
 
     TFRequest tf;
     tf.setConfig( m_config );
-    tf.cancelChanges( undoPathes );
+    tf.cancelChanges( {undoPathes} );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
@@ -142,71 +128,24 @@ void ChangesWidget::reactOnPreparedCancel() {
  */
 void ChangesWidget::reactOnPreparedExclude() {
 
-    QStringList             pathes;
-    QList<QTreeWidgetItem*> removeItems;
-
-    for( int dir_idx = 0; dir_idx < ui->preparedTree->topLevelItemCount(); dir_idx++ ) {
-
-        QTreeWidgetItem* folderItem = ui->preparedTree->topLevelItem( dir_idx );
-        QList<QTreeWidgetItem*> folderRmItems;
-
-        for( int file_idx = 0; file_idx < folderItem->childCount(); file_idx++ ) {
-
-            QTreeWidgetItem* fileItem = folderItem->child( file_idx );
-            if( fileItem->checkState(0) != Qt::Checked ) {
-                continue;
-            }
-
-            QString path = fileItem->data(0, PathRole).toString();
-            pathes.append( path );
-            folderRmItems.append( fileItem );
-        }
-
-        if( folderRmItems.count() == folderItem->childCount() ) {
-            removeItems.append( folderItem );
-        } else {
-            removeItems.append( folderRmItems );
-        }
+    QTreeWidgetItem* currentItem = ui->preparedTree->currentItem();
+    if( currentItem == nullptr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбран элемент") );
+        return;
     }
 
-    foreach (const QString& path, pathes) {
+    QStringList excludePathes;
+    collectPathFiles( currentItem, LocalPathRole, excludePathes );
+    if( excludePathes.isEmpty() ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбраны элементы для отмены изменений") );
+        return;
+    }
+
+    foreach( const QString& path, excludePathes ) {
         addExcludedFileItem( path );
     }
 
-    foreach( QTreeWidgetItem* item, removeItems ) {
-        delete item;
-    }
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Обработка изменения состояния элемента в дереве подготовленных изменений
- * \param item Измененный элемент
- */
-void ChangesWidget::reactOnPreparedItemChanged( QTreeWidgetItem* item, int ) {
-
-    ui->preparedTree->blockSignals( true );
-
-    QTreeWidgetItem* parentItem = item->parent();
-    if( parentItem == nullptr ) {
-        Qt::CheckState checkState = item->checkState(0);
-        for( int idx = 0; idx < item->childCount(); idx++ ) {
-            QTreeWidgetItem* childItem = item->child( idx );
-            childItem->setCheckState( 0, checkState );
-        }
-    } else {
-        Qt::CheckState checkState = item->checkState(0);
-        for( int idx = 0; idx < parentItem->childCount(); idx++ ) {
-            QTreeWidgetItem* childItem = parentItem->child( idx );
-            if( checkState != childItem->checkState(0) ) {
-                checkState = Qt::PartiallyChecked;
-                break;
-            }
-        }
-        parentItem->setCheckState( 0, checkState );
-    }
-
-    ui->preparedTree->blockSignals( false );
+    reloadPrepared();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -227,7 +166,9 @@ void ChangesWidget::reloadPrepared() {
 
     ui->commentEdit->clear();
 
+    QStringList pathFiles;
     QStringList preparedChanges;
+    QMap<QString, int> statuses;
 
 #ifdef WIN32
     QString detectedCaption = tr("Обнаруженные изменения:");
@@ -235,6 +176,7 @@ void ChangesWidget::reloadPrepared() {
     QString detectedCaption = tr("Detected Changes:");
 #endif
 
+    // Получение списка изменений по сопоставленным каталогам
     foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
 
         TFRequest tf;
@@ -263,27 +205,23 @@ void ChangesWidget::reloadPrepared() {
         }
     }
 
-    ui->preparedTree->blockSignals( true );
-
-    ui->preparedTree->clear();
-    m_preparedDirItems.clear();
-
+    // Из полученных изменений отбираем только ожидающие.
+    // В список файлов записываем только полный путь к элементу
     foreach( const QString& item, preparedChanges ) {
 
-        int status = UnknownStatus;
+        int status = StatusNone;
         QStringList parts;
 
         foreach( const QString& caption, m_statusesTfsMap.keys()) {
             if( !item.contains(caption, Qt::CaseInsensitive) ) {
                 continue;
             }
-
             status = m_statusesTfsMap[caption];
             parts = item.split(caption);
             break;
         }
 
-        if( status == UnknownStatus ) {
+        if( status == StatusNone ) {
             continue;
         }
 
@@ -299,55 +237,103 @@ void ChangesWidget::reloadPrepared() {
             continue;
         }
 
-        createPreparedFileItem( parts[0], parts[1], status );
+        statuses[parts[1]] = status;
+        pathFiles.append( parts[1] );
+    }
+
+    ui->preparedTree->blockSignals( true );
+
+    ui->preparedTree->clear();
+    m_preparedDirItems.clear();
+
+    { // Создание структуры каталогов
+        QStringList pathDirs = pathFiles;
+
+        for( int idx = 0; idx < pathDirs.count(); idx++ ) {
+            QString path = pathDirs[idx];
+            path = path.mid( 0, path.lastIndexOf('/') );
+            pathDirs[idx] = path;
+        }
+
+        pathDirs.sort();
+        pathDirs.removeDuplicates();
+
+        for( int idx = 0; idx < pathDirs.count(); idx++ ) {
+
+            QString path = pathDirs[idx];
+
+            QTreeWidgetItem* rootItem = new QTreeWidgetItem( ui->preparedTree );
+            rootItem->setText( 0, path );
+            rootItem->setData( 0, LocalPathRole, path );
+
+            pathDirs.removeAt( idx );
+            createTreeSubDirs( rootItem, LocalPathRole, pathDirs, idx );
+            idx--;
+        }
+    }
+
+    // Формирование списка: <путь> = QTreeWidgetItem
+    QTreeWidgetItemIterator itemIt( ui->preparedTree, QTreeWidgetItemIterator::All );
+    while( *itemIt ) {
+        QTreeWidgetItem* item = *itemIt;
+        item->setIcon( 0, QPixmap(":/folder.png") );
+        item->setData( 0, TypeRole, TypeFolder );
+
+        QString pathDir = item->data(0, LocalPathRole).toString();
+        m_preparedDirItems[pathDir] = item;
+        itemIt++;
+    }
+
+    // Создание файлов в структуре каталогов
+    foreach( const QString& filePath, pathFiles ) {
+
+        QString dirPath ;
+        QString fileName;
+        splitPath( filePath, dirPath, fileName );
+
+        int status = statuses[filePath];
+        QString iconPath;
+        switch( status ) {
+            case StatusNew   : iconPath = ":/plus.png" ; break;
+            case StatusEdit  : iconPath = ":/edit.png" ; break;
+            case StatusDelete: iconPath = ":/minus.png"; break;
+            default          : break;
+        }
+
+        QTreeWidgetItem* dirItem = m_preparedDirItems[dirPath];
+        QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
+        fileItem->setIcon( 0, joinIconsFile(fileName, iconPath) );
+        fileItem->setData( 0, Qt::DisplayRole   , fileName      );
+        fileItem->setData( 0, LocalPathRole     , filePath      );
+        fileItem->setData( 0, StatusRole        , status        );
+        fileItem->setData( 0, TypeRole          , TypeFile      );
     }
 
     ui->preparedTree->blockSignals( false );
     ui->preparedTree->expandAll();
+
+    updatePreparedActions();
 }
 //----------------------------------------------------------------------------------------------------------
 
 /*!
- * \brief Создание элемента в дереве подготовленных (ожидающих) изменений
- * \param file Имя файла
- * \param path Полный путь к элемента
- * \param status Состояние элемента
+ * \brief Обновление действий в дереве ожидающий изменений
  */
-void ChangesWidget::createPreparedFileItem( const QString& file, const QString& path, int status ) {
+void ChangesWidget::updatePreparedActions() {
 
-    QString dir = QString(path).remove(file);
-    dir = QDir::toNativeSeparators(dir);
-    if( dir.endsWith("/") || dir.endsWith("\\") ) {
-        dir = dir.remove( dir.length() - 1, 1 );
+    m_preparedDiffAction   ->setEnabled( false );
+    m_preparedCancelAction ->setEnabled( false );
+    m_excludeAction        ->setEnabled( false );
+
+    QTreeWidgetItem* currentItem = ui->preparedTree->currentItem();
+    if( currentItem == nullptr ) {
+        return;
     }
 
-    QTreeWidgetItem* dirItem = m_preparedDirItems[dir];
-    if( dirItem == nullptr ) {
+    m_preparedDiffAction   ->setEnabled( currentItem->data(0, TypeRole).toInt() == TypeFile );
+    m_preparedCancelAction ->setEnabled( true );
+    m_excludeAction        ->setEnabled( true );
 
-        dirItem = new QTreeWidgetItem;
-        dirItem->setIcon( 0, QPixmap(":/folder.png") );
-        dirItem->setData( 0, Qt::DisplayRole   , dir           );
-        dirItem->setData( 0, Qt::CheckStateRole, Qt::Unchecked );
-        dirItem->setFirstColumnSpanned( true );
-
-        ui->preparedTree->addTopLevelItem( dirItem );
-        m_preparedDirItems[dir] = dirItem;
-    }
-
-    QString iconPath;
-    switch( status ) {
-        case CreateStatus: iconPath = ":/plus.png" ; break;
-        case ChangeStatus: iconPath = ":/edit.png" ; break;
-        case DeleteStatus: iconPath = ":/minus.png"; break;
-        default          : break;
-    }
-
-    QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
-    fileItem->setIcon( 0, joinIconsFile(file, iconPath) );
-    fileItem->setData( 0, Qt::DisplayRole   , file          );
-    fileItem->setData( 0, Qt::CheckStateRole, Qt::Unchecked );
-    fileItem->setData( 0, PathRole          , path          );
-    fileItem->setData( 0, StatusRole        , status        );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -367,11 +353,11 @@ void ChangesWidget::updateCommitSize() {
 void ChangesWidget::setupPrepared() {
 
     m_preparedCtxMenu      = new QMenu( this );
-    m_preparedDiffAction   = new QAction( QIcon(":/compare.png"), tr("Сравнить" ) );
-    m_preparedCancelAction = new QAction( QIcon(":/undo.png"   ), tr("Отменить" ) );
+    m_preparedDiffAction   = new QAction( QIcon(":/compare.png"), tr("Просмотр изменений" ) );
+    m_preparedCancelAction = new QAction( QIcon(":/undo.png"   ), tr("Отменить изменения" ) );
     m_excludeAction        = new QAction( QIcon(":/exclude.png"), tr("Исключить") );
 
-    m_preparedDiffAction  ->setToolTip( tr("Сравнить с последней версией") );
+    m_preparedDiffAction  ->setToolTip( tr("Сравнить выбранный файл с последней версией") );
     m_preparedCancelAction->setToolTip( tr("Отменить изменения") );
     m_excludeAction       ->setToolTip( tr("Исключить") );
 
@@ -381,15 +367,14 @@ void ChangesWidget::setupPrepared() {
 
     m_preparedCtxMenu->addAction( m_preparedDiffAction );
     m_preparedCtxMenu->addSeparator();
+    m_preparedCtxMenu->addAction( m_excludeAction        );
     m_preparedCtxMenu->addAction( m_preparedCancelAction );
-    m_preparedCtxMenu->addSeparator();
-    m_preparedCtxMenu->addAction( m_excludeAction );
 
     connect( m_preparedDiffAction  , &QAction    ::triggered                 , this, &ChangesWidget::reactOnPreparedDiff          );
     connect( m_preparedCancelAction, &QAction    ::triggered                 , this, &ChangesWidget::reactOnPreparedCancel        );
     connect( m_excludeAction       , &QAction    ::triggered                 , this, &ChangesWidget::reactOnPreparedExclude       );
-    connect( ui->preparedTree      , &QTreeWidget::itemChanged               , this, &ChangesWidget::reactOnPreparedItemChanged   );
     connect( ui->preparedTree      , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnPreparedMenuRequested );
+    connect( ui->preparedTree      , &QTreeWidget::currentItemChanged        , this, &ChangesWidget::updatePreparedActions        );
     connect( ui->commitButton      , &QPushButton::clicked                   , this, &ChangesWidget::reactOnCommit                );
 
     QAbstractTextDocumentLayout* docLayout = ui->commentEdit->document()->documentLayout();

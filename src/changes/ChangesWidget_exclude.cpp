@@ -3,6 +3,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QToolButton>
+#include <QMessageBox>
 #include <QAbstractTextDocumentLayout>
 //----------------------------------------
 #include "methods.h"
@@ -17,61 +18,25 @@
  */
 void ChangesWidget::reactOnInclude() {
 
-    int countIncluded = 0;
-
-    for( int rootIdx = 0; rootIdx < ui->excludedTree->topLevelItemCount(); rootIdx++ ) {
-
-        QTreeWidgetItem* folderItem = ui->excludedTree->topLevelItem( rootIdx );
-
-        for( int idx = 0; idx < folderItem->childCount(); idx++ ) {
-            QTreeWidgetItem* fileItem = folderItem->child( idx );
-            if( fileItem->checkState(0) != Qt::Checked ) {
-                continue;
-            }
-
-            QString path = fileItem->data(0, PathRole).toString();
-            m_excluded.removeAll( path );
-            countIncluded++;
-        }
+    QTreeWidgetItem* currentItem = ui->excludedTree->currentItem();
+    if( currentItem == nullptr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбран элемент") );
+        return;
     }
 
-    if( countIncluded == 0 ) {
+    QStringList excludePathes;
+    collectPathFiles( currentItem, LocalPathRole, excludePathes );
+    if( excludePathes.isEmpty() ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Не выбраны элементы включения") );
         return;
+    }
+
+    foreach( const QString& path, excludePathes ) {
+        m_excluded.removeAll( path );
     }
 
     reloadExcluded();
     reloadPrepared();
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Обработка изменения состояния элемента в дереве исключенных изменений
- * \param item Измененный элемент
- */
-void ChangesWidget::reactOnExcludedItemChanged( QTreeWidgetItem* item, int ) {
-
-    ui->excludedTree->blockSignals( true );
-
-    QTreeWidgetItem* parentItem = item->parent();
-    if( parentItem == nullptr ) {
-        Qt::CheckState checkState = item->checkState(0);
-        for( int idx = 0; idx < item->childCount(); idx++ ) {
-            QTreeWidgetItem* childItem = item->child( idx );
-            childItem->setCheckState( 0, checkState );
-        }
-    } else {
-        Qt::CheckState checkState = item->checkState(0);
-        for( int idx = 0; idx < parentItem->childCount(); idx++ ) {
-            QTreeWidgetItem* childItem = parentItem->child( idx );
-            if( checkState != childItem->checkState(0) ) {
-                checkState = Qt::PartiallyChecked;
-                break;
-            }
-        }
-        parentItem->setCheckState( 0, checkState );
-    }
-
-    ui->excludedTree->blockSignals( false );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -85,17 +50,62 @@ void ChangesWidget::reloadExcluded() {
     ui->excludedTree->clear();
     m_excludedDirItems.clear();
 
+    { // Создание структуры каталогов
+        QStringList pathDirs = m_excluded;
+
+        for( int idx = 0; idx < pathDirs.count(); idx++ ) {
+            QString path = pathDirs[idx];
+            path = path.mid( 0, path.lastIndexOf('/') );
+            pathDirs[idx] = path;
+        }
+
+        pathDirs.sort();
+        pathDirs.removeDuplicates();
+
+        for( int idx = 0; idx < pathDirs.count(); idx++ ) {
+
+            QString path = pathDirs[idx];
+
+            QTreeWidgetItem* rootItem = new QTreeWidgetItem( ui->excludedTree );
+            rootItem->setText( 0, path );
+            rootItem->setData( 0, LocalPathRole, path );
+
+            pathDirs.removeAt( idx );
+            createTreeSubDirs( rootItem, LocalPathRole, pathDirs, idx );
+            idx--;
+        }
+    }
+
+    // Формирование списка: <путь> = QTreeWidgetItem
+    QTreeWidgetItemIterator itemIt( ui->excludedTree, QTreeWidgetItemIterator::All );
+    while( *itemIt ) {
+        QTreeWidgetItem* item = *itemIt;
+        item->setIcon( 0, QPixmap(":/folder.png") );
+        item->setData( 0, TypeRole, TypeFolder );
+
+        QString pathDir = item->data(0, LocalPathRole).toString();
+        m_excludedDirItems[pathDir] = item;
+        itemIt++;
+    }
+
      foreach( const QString& path, m_excluded ) {
 
-        QString folder;
-        QString file;
-        splitPath( path, folder, file );
+        QString dirPath ;
+        QString fileName;
+        splitPath( path, dirPath, fileName );
 
-        createExcludedFileItem( file, folder );
+        QTreeWidgetItem* dirItem = m_excludedDirItems[dirPath];
+        QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
+        fileItem->setIcon( 0, icon(fileName, TypeFile)  );
+        fileItem->setData( 0, Qt::DisplayRole, fileName );
+        fileItem->setData( 0, LocalPathRole  , path     );
+        fileItem->setData( 0, TypeRole       , TypeFile );
     }
 
     ui->excludedTree->blockSignals( false );
     ui->excludedTree->expandAll();
+
+    updateExcludeActions();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -106,48 +116,7 @@ void ChangesWidget::reloadExcluded() {
 void ChangesWidget::addExcludedFileItem( const QString& path ) {
 
     m_excluded.append( path );
-
-    QString folder;
-    QString file;
-    splitPath( path, folder, file );
-
-    createExcludedFileItem( file, folder );
-
-    m_excludedDirItems[folder]->setExpanded( true );
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Создание элемента в дереве исключенных изменений
- * \param file Имя файла
- * \param path Полный путь к элемента
- */
-void ChangesWidget::createExcludedFileItem( const QString& file, const QString& path ) {
-
-    QString dir = QString(path).remove(file);
-    dir = QDir::toNativeSeparators(dir);
-    if( dir.endsWith("/") || dir.endsWith("\\") ) {
-        dir = dir.remove( dir.length() - 1, 1 );
-    }
-
-    QTreeWidgetItem* dirItem = m_excludedDirItems[dir];
-    if( dirItem == nullptr ) {
-
-        dirItem = new QTreeWidgetItem;
-        dirItem->setIcon( 0, QPixmap(":/folder.png") );
-        dirItem->setData( 0, Qt::DisplayRole   , dir           );
-        dirItem->setData( 0, Qt::CheckStateRole, Qt::Unchecked );
-        dirItem->setFirstColumnSpanned( true );
-
-        ui->excludedTree->addTopLevelItem( dirItem );
-        m_excludedDirItems[dir] = dirItem;
-    }
-
-    QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
-    fileItem->setIcon( 0, icon(file, File)                  );
-    fileItem->setData( 0, Qt::DisplayRole   , file          );
-    fileItem->setData( 0, Qt::CheckStateRole, Qt::Unchecked );
-    fileItem->setData( 0, PathRole          , QString("%1/%2").arg(path, file));
+    reloadExcluded();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -158,6 +127,22 @@ void ChangesWidget::createExcludedFileItem( const QString& file, const QString& 
 void ChangesWidget::reactOnExcludeMenuRequested( const QPoint& pos ) {
 
     m_excludeCtxMenu->popup( ui->excludedTree->viewport()->mapToGlobal(pos) );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Обновление действий в дереве исключений
+ */
+void ChangesWidget::updateExcludeActions() {
+
+    m_includeAction->setEnabled( false );
+
+    QTreeWidgetItem* currentItem = ui->excludedTree->currentItem();
+    if( currentItem == nullptr ) {
+        return;
+    }
+
+    m_includeAction->setEnabled( true );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -175,7 +160,7 @@ void ChangesWidget::setupExcluded() {
     ui->excludedTree->setContextMenuPolicy( Qt::CustomContextMenu );
 
     connect( m_includeAction , &QAction    ::triggered                 , this, &ChangesWidget::reactOnInclude              );
-    connect( ui->excludedTree, &QTreeWidget::itemChanged               , this, &ChangesWidget::reactOnExcludedItemChanged  );
+    connect( ui->excludedTree, &QTreeWidget::currentItemChanged        , this, &ChangesWidget::updateExcludeActions        );
     connect( ui->excludedTree, &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnExcludeMenuRequested );
 }
  //----------------------------------------------------------------------------------------------------------

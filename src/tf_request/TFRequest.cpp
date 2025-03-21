@@ -329,6 +329,29 @@ void TFRequest::entriesDir( const QString& dir, bool isFiles ) {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Просмотр файла на сервере
+ * \param file Путь к файлу
+ */
+void TFRequest::view( const QString& file, const QString& version ) {
+
+    QStringList args = { "view",
+                        // QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
+                        // QString("-collection:%1").arg(m_config.m_azure.url),
+                        file };
+
+    if( !version.isEmpty() ) {
+        args.append( QString("-version:C%1").arg(version) );
+    }
+
+    if( m_isAsync ) {
+        m_tf->start( m_config.m_azure.tfPath, args );
+    } else {
+        execute( args );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Получение журнала изменений
  * \param path Путь к элементу, у которого нужно получить журнал изменений
  */
