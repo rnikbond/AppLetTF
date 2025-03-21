@@ -1,4 +1,5 @@
 //----------------------------------------
+#include <QDir>
 #include <QTime>
 #include <QMenu>
 #include <QDebug>
@@ -23,6 +24,16 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupArgs   ();
     setupTray   ();
     setupArgs   ();
+
+    QDir::setCurrent( workDirPath() );
+
+    // Очистка рабочей директории от файлов, которые создал TF
+    QStringList files = QDir(workDirPath()).entryList( QDir::Files );
+    foreach( const QString& file, files ) {
+        if( !file.endsWith(".cfg") && !files.endsWith(".dat") ) {
+            QFile(file).remove();
+        }
+    }
 
     m_logAction     ->setChecked( true );
     m_maximizeAction->setChecked( true );
