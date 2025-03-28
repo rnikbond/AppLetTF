@@ -250,6 +250,183 @@ QList<WorkfoldItem> parseWorkfolds( const QStringList& items ) {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Получение информации об ожидающих изменений из команды status
+ * \param items Ответ команды
+ * \param dirPath Путь к каталогу сопоставленному каталогу, в которого запрашивался статус
+ * \return Список изменений
+ */
+QList<StatusItem> parseStatusPrepared( const QStringList& items, const QString& dirPath ) {
+
+    /* Пример вывода команды
+     * [ 0] File name                                                       Change Local path
+     * [ 1] --------------------------------------------------------------- ------ --------
+     * [ 2] $/Proje/mainfold/wwwwwww/Fld/SubFld/src
+     * [ 3] datStr.cpp                                                      edit   /home/usr/work/mainfold/wwwwwww/Fld/SubFld/src/datStr.cpp
+     * [ 4]
+     * [ 5] $/Proje/mainfold/wwwwwww/Customs/common
+     * [ 6] json.h                                                          edit   /home/usr/work/mainfold/wwwwwww/Customs/common/json.h
+     * [ 7] $/Proje/mainfold/wwwwwww/Tmp/FldDebug/src
+     * [ 8] CFldDebug.cpp                                                   edit   /home/usr/work/mainfold/wwwwwww/Tmp/FldDebug/src/CFldDebug.cpp
+     * [ 9] CFldDebug.h                                                     edit   /home/usr/work/mainfold/wwwwwww/Tmp/FldDebug/src/CFldDebug.h
+     * [10] -------------------------------------------------------------------------------
+     * [11] Detected Changes:
+     * [12] -------------------------------------------------------------------------------
+     * [13] File name                                                     Change             Local path
+     * [14] ------------------------------------------------------------- ------------------ -
+     * [15] $/Proje/mainfold/wwwwwww/Tmp/TmpCoreCustom/build/5_15_3-Debug
+     * [16] .qmake.stash                                                  add                /home/usr/work/mainfold/wwwwwww/Sch/TmpCoreCustom/build/5_15_3-Debug/.qmake.stash
+     * [17] Makefile                                                      add                /home/usr/work/mainfold/wwwwwww/Sch/TmpCoreCustom/build/5_15_3-Debug/Makefile
+     * [18] $/Proje/mainfold/wwwwwww/Builstation
+     * [19] linux_symlinks.sh                                             add, property (+x) /home/usr/work/mainfold/wwwwwww/Builstation/linux_symlinks.sh
+     * [20] 15 change(s), 7 detected change(s)
+     */
+
+    if( items.count() < 2 ) {
+        return {}; // В ответе на status должно быть минимум 2 строки
+    }
+
+    int idxDetected = items.count() ;
+    for( int idx = 0; idx < items.count(); idx++ ) {
+        const QString& item = items.at(idx);
+        if (item.contains("Detected Changes:")) {
+            idxDetected = idx;
+            break;
+        }
+    }
+
+    QStringList preparedFilesInfo;
+    for( int idx = 0; idx < idxDetected; idx++ ) {
+        const QString& item = items.at(idx);
+        if( item.contains(dirPath) ) {
+            preparedFilesInfo.append( items[idx] );
+        }
+    }
+
+    QString title = items[1];
+    QList<QPair<int, int>> positions = parsePositions( title );
+
+    return parseStatus( preparedFilesInfo, positions );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение информации об обнаруженных изменениях из команды status
+ * \param items Ответ команды
+ * \param dirPath Путь к каталогу сопоставленному каталогу, в которого запрашивался статус
+ * \return Список изменений
+ */
+QList<StatusItem> parseStatusDetected( const QStringList& items, const QString& dirPath ) {
+
+    /* Пример вывода команды
+     * [ 0] File name                                                       Change Local path
+     * [ 1] --------------------------------------------------------------- ------ --------
+     * [ 2] $/Proje/mainfold/wwwwwww/Fld/SubFld/src
+     * [ 3] datStr.cpp                                                      edit   /home/usr/work/mainfold/wwwwwww/Fld/SubFld/src/datStr.cpp
+     * [ 4]
+     * [ 5] $/Proje/mainfold/wwwwwww/Customs/common
+     * [ 6] json.h                                                          edit   /home/usr/work/mainfold/wwwwwww/Customs/common/json.h
+     * [ 7] $/Proje/mainfold/wwwwwww/Tmp/FldDebug/src
+     * [ 8] CFldDebug.cpp                                                   edit   /home/usr/work/mainfold/wwwwwww/Tmp/FldDebug/src/CFldDebug.cpp
+     * [ 9] CFldDebug.h                                                     edit   /home/usr/work/mainfold/wwwwwww/Tmp/FldDebug/src/CFldDebug.h
+     * [10] -------------------------------------------------------------------------------
+     * [11] Detected Changes:
+     * [12] -------------------------------------------------------------------------------
+     * [13] File name                                                     Change             Local path
+     * [14] ------------------------------------------------------------- ------------------ -
+     * [15] $/Proje/mainfold/wwwwwww/Tmp/TmpCoreCustom/build/5_15_3-Debug
+     * [16] .qmake.stash                                                  add                /home/usr/work/mainfold/wwwwwww/Sch/TmpCoreCustom/build/5_15_3-Debug/.qmake.stash
+     * [17] Makefile                                                      add                /home/usr/work/mainfold/wwwwwww/Sch/TmpCoreCustom/build/5_15_3-Debug/Makefile
+     * [18] $/Proje/mainfold/wwwwwww/Builstation
+     * [19] linux_symlinks.sh                                             add, property (+x) /home/usr/work/mainfold/wwwwwww/Builstation/linux_symlinks.sh
+     * [20] 15 change(s), 7 detected change(s)
+     */
+
+    if( items.count() < 3 ) {
+        return {}; // В ответе на status должно быть минимум 3 строки
+    }
+
+    int idxDetected = items.count() ;
+    for( int idx = 0; idx < items.count(); idx++ ) {
+        const QString& item = items.at(idx);
+        if (item.contains("Detected Changes:")) {
+            idxDetected = idx;
+            break;
+        }
+    }
+
+    QStringList detectedFilesInfo;
+    for( int idx = idxDetected + 1; idx < items.count(); idx++ ) {
+        const QString& item = items.at(idx);
+        if( item.contains(dirPath) ) {
+            detectedFilesInfo.append( items[idx] );
+        }
+    }
+
+    QString title = items[idxDetected + 3];
+    QList<QPair<int, int>> positions = parsePositions( title );
+    return parseStatus( detectedFilesInfo, positions );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение информации об изменениях из предобработанного списка
+ * \param items Предобработанный список элементов
+ * \param positions Позиции заголовков
+ * \return Информация об изменениях в виде структурированног списка
+ *
+ * Это вспомогательный метод и он не должен вызываться напрямую.
+ * Вместо это вызывать нужно:
+ * \sa parseStatusPrepared()
+ * \sa parseStatusDetected()
+ */
+QList<StatusItem> parseStatus( const QStringList& items, const QList<QPair<int, int>>& positions ) {
+
+    if( positions.count() != 3 ) {
+        return {}; // Должно быть 3 загововка
+    }
+
+    QList<StatusItem> statusItems;
+
+    QPair<int, int> posFile   = positions[0];
+    QPair<int, int> posStatus = positions[1];
+    QPair<int, int> posPath   = positions[2];
+
+    foreach( const QString& fileInfo, items ) {
+
+        int status = StatusNone;
+        { // Вычисление статусы
+            QString statusInfo = fileInfo.mid(posStatus.first, posStatus.second).trimmed();
+            if(statusInfo.contains("add")) {
+                status |= StatusNew;
+            }
+            if(statusInfo.contains("edit")) {
+                status |= StatusEdit;
+            }
+            if(statusInfo.contains("del") || statusInfo.contains("remove")) {
+                status |= StatusDelete;
+            }
+            if(statusInfo.contains("rename")) {
+                status |= StatusRename;
+            }
+        }
+
+        // Для последнего столбца заголовок не доходит до конца строки,
+        // поэтому пересчитываем для каждой строки отдельно
+        posPath.second = fileInfo.length() - posPath.first;
+
+        StatusItem item;
+        item.name   = fileInfo.mid(posFile.first, posFile.second).trimmed();
+        item.status = status;
+        item.path   = fileInfo.mid(posPath.first, posPath.second).trimmed();
+
+        statusItems.append( item );
+    }
+
+    return statusItems;
+}
+//-----------------------------7-----------------------------------------------------------------------------
+
+/*!
  * \brief Получение позиций столбцов
  * \param title Заголовок (отчерк)
  * \return Список позиций в формате: <позиция,длина>

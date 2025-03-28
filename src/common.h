@@ -16,11 +16,11 @@ enum FileTypes {
 
 /// Статусы
 enum Statuses {
-    StatusNone   = 0x0, ///< Неизвестный статус
-    StatusNew    = 0x1, ///< Новый
-    StatusEdit   = 0x2, ///< Измененный
-    StatusDelete = 0x4, ///< Удаленный
-    StatusRename = 0x8, ///< Переименованный
+    StatusNone     = 0x00, ///< Неизвестный статус
+    StatusNew      = 0x01, ///< Новый
+    StatusEdit     = 0x02, ///< Измененный (edit)
+    StatusDelete   = 0x04, ///< Удаленный
+    StatusRename   = 0x08, ///< Переименованный
 };
 //----------------------------------------
 
@@ -41,6 +41,16 @@ enum CustomRoles {
 struct WorkfoldItem {
     QString pathServer; /// Путь к каталогу на сервер
     QString pathLocal ; /// Путь к локальному каталогу
+};
+//----------------------------------------
+
+/*!
+ * \brief Структура элемента сопоставления каталогов
+ */
+struct StatusItem {
+    QString name  ; /// Имя файла
+    QString path  ; /// Полный путь к файлу
+    int     status; /// Статус
 };
 //----------------------------------------
 

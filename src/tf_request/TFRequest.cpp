@@ -351,6 +351,8 @@ void TFRequest::view( const QString& file, const QString& version ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
+#include <cstdlib>
+
 /*!
  * \brief Получение журнала изменений
  * \param path Путь к элементу, у которого нужно получить журнал изменений
@@ -374,8 +376,8 @@ void TFRequest::history( const QString& path ) {
     QStringList args = {
         "history",
         "-recursive",
-        QString("-collection:%1").arg(m_config.m_azure.url),
-        "-noprompt",
+        //QString("-collection:%1").arg(m_config.m_azure.url),
+        //"-noprompt",
         path
     };
 

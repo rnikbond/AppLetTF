@@ -16,6 +16,7 @@ HistoryDetailWidget::HistoryDetailWidget( QWidget* parent ) : QWidget(parent), u
     setupCtxMenu();
 
     ui->infoLabel->clear();
+    ui->infoLabel->setTextInteractionFlags( Qt::TextSelectableByMouse );
     ui->infoLabel->setWordWrap( true );
 
     ui->filesTable->setColumnCount      ( ColumnCount );

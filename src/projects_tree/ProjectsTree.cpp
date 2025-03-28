@@ -35,6 +35,8 @@ ProjectsTree::ProjectsTree(QWidget *parent) : QWidget(parent) , ui(new Ui::Proje
     connect( ui->projectsTree, &QTreeWidget::currentItemChanged        , this,                                     &ProjectsTree::updateActions   );
     connect( ui->projectsTree, &QTreeWidget::customContextMenuRequested, this,                                     &ProjectsTree::showCtxMenu     );
     connect( ui->historyTab  , &QTabWidget ::tabCloseRequested         , this,                                     &ProjectsTree::closeHistoryTab );
+
+    updateActions();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -428,6 +430,10 @@ void ProjectsTree::setupActions() {
     m_cloneСertainAction = new QAction( QIcon(":/save.png"  ), tr("Получить версию") );
     m_historyAction      = new QAction( QIcon(":/list.png"  ), tr("Журнал"         ) );
     m_reloadAction       = new QAction( QIcon(":/reload.png"), tr("Обновить"       ) );
+
+    m_reloadAction->setShortcut( QKeySequence(Qt::Key_F5) );
+    m_reloadAction->setToolTip( m_reloadAction->toolTip() + " " + m_reloadAction->shortcut().toString() );
+    m_reloadAction->setShortcutVisibleInContextMenu( true );
 
     connect( m_reloadAction      , &QAction::triggered, this, &ProjectsTree::reload       );
     connect( m_historyAction     , &QAction::triggered, this, &ProjectsTree::history      );

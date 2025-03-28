@@ -1,6 +1,7 @@
 //----------------------------------------
 #include <QDir>
 #include <QMenu>
+#include <QDebug>
 #include <QAction>
 #include <QSettings>
 #include <QTextStream>
@@ -25,6 +26,8 @@ ChangesWidget::ChangesWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::Ch
     setupDetected();
 
     m_reloadAction = new QAction( QIcon(":/reload.png"), tr("Обновить"), this );
+    m_reloadAction->setShortcut( QKeySequence(Qt::Key_F5) );
+    m_reloadAction->setToolTip( m_reloadAction->toolTip() + " " + m_reloadAction->shortcut().toString() );
 
     m_reloadState = false;
 

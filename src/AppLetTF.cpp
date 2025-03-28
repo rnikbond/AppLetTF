@@ -2,6 +2,7 @@
 #include <QDir>
 #include <QTime>
 #include <QMenu>
+#include <QEvent>
 #include <QDebug>
 #include <QScreen>
 #include <QTextBlock>
@@ -25,6 +26,8 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupTray   ();
     setupArgs   ();
 
+    qApp->installEventFilter( this );
+
     QDir::setCurrent( workDirPath() );
 
     // Очистка рабочей директории от файлов, которые создал TF
@@ -34,6 +37,9 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
             QFile(file).remove();
         }
     }
+
+    const QFont fixedFont = QFontDatabase::systemFont( QFontDatabase::FixedFont );
+    ui->logEdit->setFont( fixedFont );
 
     m_logAction     ->setChecked( true );
     m_maximizeAction->setChecked( true );
@@ -333,7 +339,8 @@ void AppLetTF::setupUI() {
     ui->toolBar->setIconSize( QSize(20, 20) );
     ui->toolBar->setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
 
-    connect( ui->projectsTree, &ProjectsTree::commandExecuted, this, &AppLetTF::appendOutput );
+    connect( ui->projectsTree, &ProjectsTree ::commandExecuted, this, &AppLetTF::appendOutput );
+    connect( ui->changes     , &ChangesWidget::commandExecuted, this, &AppLetTF::appendOutput );
 
     addToolBar( Qt::LeftToolBarArea, ui->toolBar );
 }
@@ -383,8 +390,10 @@ void AppLetTF::appendOutput( bool isErr, int code, const QString& err, const QSt
         ui->logEdit->clear();
     }
 
+    QString nowStr = QTime::currentTime().toString("hh:mm:ss.zzz") ;
+
     ui->logEdit->append("");
-    ui->logEdit->append( QTime::currentTime().toString("hh:mm:ss.zzz") );
+    ui->logEdit->append( QString("[%1] ><><><><><><><><><><><>< ").arg(nowStr) );
 
     if( isErr) {
         QColor textColorSave = ui->logEdit->textColor();

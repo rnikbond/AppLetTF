@@ -72,8 +72,6 @@ private: // Detected Tree
     void reactOnDetectedMenuRequested( const QPoint& pos );
     void reactOnDetectedApply();
 
-    void createDetectedFileItem( const QString& file, const QString& path, int status );
-
     void updateDetectedActions();
 
 private: // Exclude Tree

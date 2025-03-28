@@ -19,7 +19,12 @@
  */
 void ChangesWidget::reactOnCommit() {
 
-    QString     comment = ui->commentEdit->toPlainText();
+    QString comment = ui->commentEdit->toPlainText();
+    if( comment.trimmed().isEmpty() || comment.trimmed().length() < 10 ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Комментарий не может быть пустым или коротким (< 10 символов)") );
+        return;
+    }
+
     QStringList changeFiles;
 
     QTreeWidgetItemIterator itemIt( ui->preparedTree, QTreeWidgetItemIterator::All );
@@ -33,6 +38,7 @@ void ChangesWidget::reactOnCommit() {
     }
 
     if( changeFiles.isEmpty() ) {
+        QMessageBox::warning( this, tr("Ошибка"), tr("Нет файлов для записи изменений") );
         return;
     }
 
@@ -45,6 +51,10 @@ void ChangesWidget::reactOnCommit() {
         QMessageBox::warning( this, tr("Ошибка"), tf.m_errText );
         return;
     }
+
+    ui->commentEdit->blockSignals( true );
+    ui->commentEdit->clear();
+    ui->commentEdit->blockSignals( false );
 
     reload();
 }
@@ -164,17 +174,8 @@ void ChangesWidget::reactOnPreparedMenuRequested( const QPoint& pos ) {
  */
 void ChangesWidget::reloadPrepared() {
 
-    ui->commentEdit->clear();
-
     QStringList pathFiles;
-    QStringList preparedChanges;
-    QMap<QString, int> statuses;
-
-#ifdef WIN32
-    QString detectedCaption = tr("Обнаруженные изменения:");
-#else
-    QString detectedCaption = tr("Detected Changes:");
-#endif
+    QList<StatusItem> items;
 
     // Получение списка изменений по сопоставленным каталогам
     foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
@@ -188,60 +189,23 @@ void ChangesWidget::reloadPrepared() {
             continue;
         }
 
-        int idx_detected = tf.m_response.count();
-        for( int idx = 0; idx < tf.m_response.count(); idx++ ) {
-            const QString& item = tf.m_response.at(idx);
-            if (item.contains(detectedCaption)) {
-                idx_detected = idx;
-                break;
-            }
-        }
+        QList<StatusItem> itemsWorkfold = parseStatusPrepared(tf.m_response, dirLocal);
 
-        for( int idx = 0; idx < idx_detected; idx++ ) {
-            const QString& item = tf.m_response.at(idx);
-            if( item.contains(dirLocal) ) {
-                preparedChanges.append( tf.m_response[idx] );
-            }
-        }
-    }
-
-    // Из полученных изменений отбираем только ожидающие.
-    // В список файлов записываем только полный путь к элементу
-    foreach( const QString& item, preparedChanges ) {
-
-        int status = StatusNone;
-        QStringList parts;
-
-        foreach( const QString& caption, m_statusesTfsMap.keys()) {
-            if( !item.contains(caption, Qt::CaseInsensitive) ) {
+        for( int idx = 0; idx < itemsWorkfold.count(); idx++ ) {
+            const StatusItem& item = itemsWorkfold.at( idx );
+            if( m_excluded.contains(item.path) ) {
+                itemsWorkfold.removeAt(idx);
+                idx--;
                 continue;
             }
-            status = m_statusesTfsMap[caption];
-            parts = item.split(caption);
-            break;
+
+            pathFiles.append( item.path );
         }
 
-        if( status == StatusNone ) {
-            continue;
+        if( !itemsWorkfold.isEmpty() ) {
+            items.append( itemsWorkfold );
         }
-
-        if( parts.count() != 2 ) {
-            continue;
-        }
-
-        parts[0] = parts[0].trimmed();
-        parts[1] = parts[1].trimmed();
-        parts[0] = QDir::toNativeSeparators(parts[0]);
-
-        if( m_excluded.contains(parts[1]) ) {
-            continue;
-        }
-
-        statuses[parts[1]] = status;
-        pathFiles.append( parts[1] );
     }
-
-    ui->preparedTree->blockSignals( true );
 
     ui->preparedTree->clear();
     m_preparedDirItems.clear();
@@ -285,15 +249,14 @@ void ChangesWidget::reloadPrepared() {
     }
 
     // Создание файлов в структуре каталогов
-    foreach( const QString& filePath, pathFiles ) {
+    foreach( const StatusItem& item, items ) {
 
         QString dirPath ;
         QString fileName;
-        splitPath( filePath, dirPath, fileName );
+        splitPath( item.path, dirPath, fileName );
 
-        int status = statuses[filePath];
         QString iconPath;
-        switch( status ) {
+        switch( item.status ) {
             case StatusNew   : iconPath = ":/plus.png" ; break;
             case StatusEdit  : iconPath = ":/edit.png" ; break;
             case StatusDelete: iconPath = ":/minus.png"; break;
@@ -302,16 +265,14 @@ void ChangesWidget::reloadPrepared() {
 
         QTreeWidgetItem* dirItem = m_preparedDirItems[dirPath];
         QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
-        fileItem->setIcon( 0, joinIconsFile(fileName, iconPath) );
-        fileItem->setData( 0, Qt::DisplayRole   , fileName      );
-        fileItem->setData( 0, LocalPathRole     , filePath      );
-        fileItem->setData( 0, StatusRole        , status        );
-        fileItem->setData( 0, TypeRole          , TypeFile      );
+        fileItem->setIcon( 0, joinIconsFile(fileName, iconPath)  );
+        fileItem->setData( 0, Qt::DisplayRole   , fileName       );
+        fileItem->setData( 0, LocalPathRole     , item.path      );
+        fileItem->setData( 0, StatusRole        , item.status    );
+        fileItem->setData( 0, TypeRole          , TypeFile       );
     }
 
-    ui->preparedTree->blockSignals( false );
     ui->preparedTree->expandAll();
-
     updatePreparedActions();
 }
 //----------------------------------------------------------------------------------------------------------

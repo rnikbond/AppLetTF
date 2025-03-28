@@ -1,11 +1,13 @@
 //----------------------------------------
 #include <QDir>
 #include <QMenu>
+#include <QDebug>
 #include <QAction>
 #include <QToolButton>
 #include <QMessageBox>
 //----------------------------------------
 #include "common.h"
+#include "methods.h"
 #include "TFRequest.h"
 //----------------------------------------
 #include "ChangesWidget.h"
@@ -58,13 +60,8 @@ void ChangesWidget::reactOnDetectedMenuRequested( const QPoint& pos ) {
  */
 void ChangesWidget::reloadDetected() {
 
-    QStringList detectedChanges;
-
-#ifdef WIN32
-    QString detectedCaption = tr("Обнаруженные изменения:");
-#else
-    QString detectedCaption = tr("Detected Changes:");
-#endif
+    QStringList pathFiles;
+    QList<StatusItem> items;
 
     foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
 
@@ -77,99 +74,82 @@ void ChangesWidget::reloadDetected() {
             continue;
         }
 
-        int idx_detected = tf.m_response.count();
-        for( int idx = 0; idx < tf.m_response.count(); idx++ ) {
-            const QString& item = tf.m_response.at(idx);
-            if (item.contains(detectedCaption)) {
-                idx_detected = idx;
-                break;
-            }
+        QList<StatusItem> itemsWorkfold = parseStatusDetected( tf.m_response, dirLocal );
+        for( int idx = 0; idx < itemsWorkfold.count(); idx++ ) {
+            const StatusItem& item = itemsWorkfold.at( idx );
+            pathFiles.append( item.path );
         }
 
-        for( int idx = idx_detected + 1; idx < tf.m_response.count(); idx++ ) {
-            const QString& item = tf.m_response.at(idx);
-            if( item.contains(dirLocal) ) {
-                detectedChanges.append( tf.m_response[idx] );
-            }
-        }
+        items.append( itemsWorkfold );
     }
 
     ui->detectedTree->clear();
     m_detectedDirItems.clear();
 
-    foreach( const QString& item, detectedChanges ) {
+    { // Создание структуры каталогов
+        QStringList pathDirs = pathFiles;
 
-        int status = StatusNone;
-        QStringList parts;
-
-        foreach( const QString& caption, m_statusesTfsMap.keys()) {
-            if( !item.contains(caption, Qt::CaseInsensitive) ) {
-                continue;
-            }
-
-            status = m_statusesTfsMap[caption];
-            parts = item.split(caption);
-            break;
+        for( int idx = 0; idx < pathDirs.count(); idx++ ) {
+            QString path = pathDirs[idx];
+            path = path.mid( 0, path.lastIndexOf('/') );
+            pathDirs[idx] = path;
         }
 
-        if( status == StatusNone ) {
-            continue;
+        pathDirs.sort();
+        pathDirs.removeDuplicates();
+
+        for( int idx = 0; idx < pathDirs.count(); idx++ ) {
+
+            QString path = pathDirs[idx];
+
+            QTreeWidgetItem* rootItem = new QTreeWidgetItem( ui->detectedTree );
+            rootItem->setText( 0, path );
+            rootItem->setData( 0, LocalPathRole, path );
+
+            pathDirs.removeAt( idx );
+            createTreeSubDirs( rootItem, LocalPathRole, pathDirs, idx );
+            idx--;
         }
-
-        if( parts.count() != 2 ) {
-            continue;
-        }
-
-        parts[0] = parts[0].trimmed();
-        parts[1] = parts[1].trimmed();
-        parts[0] = QDir::toNativeSeparators(parts[0]);
-        createDetectedFileItem( parts[0], parts[1], status );
     }
 
-    ui->detectedTree->expandAll();
-}
-//----------------------------------------------------------------------------------------------------------
+    // Формирование списка: <путь> = QTreeWidgetItem
+    QTreeWidgetItemIterator itemIt( ui->detectedTree, QTreeWidgetItemIterator::All );
+    while( *itemIt ) {
+        QTreeWidgetItem* item = *itemIt;
+        item->setIcon( 0, QPixmap(":/folder.png") );
+        item->setData( 0, TypeRole, TypeFolder );
 
-/*!
- * \brief Создание эдемента в дереве обнаруженных изменений
- * \param file Имя файла
- * \param path Полный путь к элемента
- * \param status Состояние элемента
- */
-void ChangesWidget::createDetectedFileItem( const QString& file, const QString& path, int status ) {
-
-    QString dir = QString(path).remove(file);
-    dir = QDir::toNativeSeparators(dir);
-    if( dir.endsWith("/") || dir.endsWith("\\") ) {
-        dir = dir.remove( dir.length() - 1, 1 );
+        QString pathDir = item->data(0, LocalPathRole).toString();
+        m_detectedDirItems[pathDir] = item;
+        itemIt++;
     }
 
-    QTreeWidgetItem* dirItem = m_detectedDirItems[dir];
-    if( dirItem == nullptr ) {
+    // Создание файлов в структуре каталогов
+    foreach( const StatusItem& item, items ) {
 
-        dirItem = new QTreeWidgetItem;
-        dirItem->setIcon( 0, QPixmap(":/folder.png") );
-        dirItem->setData( 0, Qt::DisplayRole, dir );
-        dirItem->setFirstColumnSpanned( true );
+        QString dirPath ;
+        QString fileName;
+        splitPath( item.path, dirPath, fileName );
 
-        ui->detectedTree->addTopLevelItem( dirItem );
-        m_detectedDirItems[dir] = dirItem;
-    }
-
-    QString iconPath;
-
-    switch( status ) {
+        QString iconPath;
+        switch( item.status ) {
         case StatusNew   : iconPath = ":/plus.png" ; break;
         case StatusEdit  : iconPath = ":/edit.png" ; break;
         case StatusDelete: iconPath = ":/minus.png"; break;
         default          : break;
+        }
+
+        QTreeWidgetItem* dirItem = m_detectedDirItems[dirPath];
+        QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
+        fileItem->setIcon( 0, joinIconsFile(fileName, iconPath)  );
+        fileItem->setData( 0, Qt::DisplayRole   , fileName       );
+        fileItem->setData( 0, LocalPathRole     , item.path      );
+        fileItem->setData( 0, StatusRole        , item.status    );
+        fileItem->setData( 0, TypeRole          , TypeFile       );
     }
 
-    QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
-    fileItem->setIcon( 0, QIcon(iconPath)         );
-    fileItem->setData( 0, Qt::DisplayRole, file   );
-    fileItem->setData( 0, LocalPathRole  , path   );
-    fileItem->setData( 0, StatusRole     , status );
+    ui->detectedTree->expandAll();
+    updateDetectedActions();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -201,6 +181,7 @@ void ChangesWidget::setupDetected() {
 
     ui->detectedTree->header()->hide();
     ui->detectedTree->setContextMenuPolicy( Qt::CustomContextMenu );
+    ui->detectedTree->setIconSize( QSize(40, 20) );
 
     m_detectedCtxMenu->addAction(m_detectedApplyAction);
 

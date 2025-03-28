@@ -9,11 +9,14 @@
 #include "common.h"
 //----------------------------------------
 
-QList<Workspace>    parseWorkspaces   ( const QStringList& items );
-QList<AzureItem>    parseEntries      ( const QStringList& entries );
-QList<HistoryItem>  parseHistory      ( const QStringList& items );
-HistoryDetailItem   parseDetailHistory( const QStringList& items );
-QList<WorkfoldItem> parseWorkfolds    ( const QStringList& items );
+QList<Workspace>    parseWorkspaces    ( const QStringList& items );
+QList<AzureItem>    parseEntries       ( const QStringList& entries );
+QList<HistoryItem>  parseHistory       ( const QStringList& items );
+HistoryDetailItem   parseDetailHistory ( const QStringList& items );
+QList<WorkfoldItem> parseWorkfolds     ( const QStringList& items );
+QList<StatusItem>   parseStatusPrepared( const QStringList& items, const QString& dirPath );
+QList<StatusItem>   parseStatusDetected( const QStringList& items, const QString& dirPath );
+QList<StatusItem>   parseStatus        ( const QStringList& items, const QList<QPair<int, int>>& positions );
 
 QList<QPair<int, int>> parsePositions( const QString& title );
 
