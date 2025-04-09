@@ -136,11 +136,9 @@ void AppLetTF::reactOnTray( QSystemTrayIcon::ActivationReason reason ) {
 
     switch (reason){
         case QSystemTrayIcon::Trigger: {
-            bool newState = !isVisible();
-            setVisible( newState );
-            if( newState ) {
-                raise();
-            }
+            show();
+            activateWindow();
+            raise();
             break;
         }
         default: break;

@@ -1,5 +1,6 @@
 //----------------------------------------
 #include <QDir>
+#include <QTime>
 #include <QMenu>
 #include <QDebug>
 #include <QAction>
@@ -142,6 +143,9 @@ void ChangesWidget::reload() {
     reloadPrepared();
     reloadExcluded();
     reloadDetected();
+
+    m_reloadAction->setText   ( tr("Обновить [%1]").arg(QTime::currentTime().toString("hh:mm"   )) );
+    m_reloadAction->setToolTip( tr("Обновлено: %1").arg(QTime::currentTime().toString("hh:mm:ss")) );
 }
 //----------------------------------------------------------------------------------------------------------
 
