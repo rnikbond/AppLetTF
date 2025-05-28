@@ -7,7 +7,6 @@
 #include <QAbstractTextDocumentLayout>
 //----------------------------------------
 #include "methods.h"
-#include "TFRequest.h"
 //----------------------------------------
 #include "ChangesWidget.h"
 #include "ui_ChangesWidget.h"

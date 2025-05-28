@@ -87,7 +87,11 @@ void ChangesWidget::restoreData() {
     QString data = file.readAll();
     file.close();
 
-    m_excluded = data.split(";");
+    if( data.isEmpty() ) {
+        return;
+    }
+
+    m_excluded = data.split(";", Qt::KeepEmptyParts);
 }
 //----------------------------------------------------------------------------------------------------------
 

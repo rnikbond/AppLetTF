@@ -188,7 +188,7 @@ void TFRequest::getDir( const QString& dir, const QString& version ) {
     };
 
     if( !version.isEmpty() ) {
-        args.append( QString("-varsion:").arg(version) );
+        args.append( QString("-version:").arg(version) );
     }
 
     if( m_isAsync ) {

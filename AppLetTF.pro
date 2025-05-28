@@ -1,60 +1,60 @@
 QT     += core gui widgets
-TARGET  = AppLetTFS
+TARGET  = AppLetTF
 CONFIG += c++17
 
-INCLUDEPATH += src                \
-               src/tf_request     \
-               src/config         \
-               src/settings       \
-               src/projects_tree  \
-               src/history        \
-               src/history_detail \
-               src/workspaces     \
-               src/azure_tree     \
-               src/changes
+INCLUDEPATH += $$PWD/src                \
+               $$PWD/src/tf_request     \
+               $$PWD/src/config         \
+               $$PWD/src/settings       \
+               $$PWD/src/projects_tree  \
+               $$PWD/src/history        \
+               $$PWD/src/history_detail \
+               $$PWD/src/workspaces     \
+               $$PWD/src/azure_tree     \
+               $$PWD/src/changes
 
-HEADERS += src/AppLetTF.h                           \
-           src/azure_tree/AzureTreeDialog.h         \
-           src/changes/ChangesWidget.h              \
-           src/common.h                             \
-           src/config/Config.h                      \
-           src/methods.h                            \
-           src/tf_request/TFRequest.h               \
-           src/settings/SettingsDialog.h            \
-           src/projects_tree/ProjectsTree.h         \
-           src/history/HistoryWidget.h              \
-           src/history_detail/HistoryDetailWidget.h \
-           src/workspaces/NewWorkspaceDialog.h      \
-           src/workspaces/WorkspacesDialog.h
+HEADERS += $$PWD/src/AppLetTF.h                           \
+           $$PWD/src/azure_tree/AzureTreeDialog.h         \
+           $$PWD/src/changes/ChangesWidget.h              \
+           $$PWD/src/common.h                             \
+           $$PWD/src/config/Config.h                      \
+           $$PWD/src/methods.h                            \
+           $$PWD/src/tf_request/TFRequest.h               \
+           $$PWD/src/settings/SettingsDialog.h            \
+           $$PWD/src/projects_tree/ProjectsTree.h         \
+           $$PWD/src/history/HistoryWidget.h              \
+           $$PWD/src/history_detail/HistoryDetailWidget.h \
+           $$PWD/src/workspaces/NewWorkspaceDialog.h      \
+           $$PWD/src/workspaces/WorkspacesDialog.h
 
-SOURCES += main.cpp                                   \
-           src/AppLetTF.cpp                           \
-           src/azure_tree/AzureTreeDialog.cpp         \
-           src/changes/ChangesWidget.cpp              \
-           src/changes/ChangesWidget_detected.cpp     \
-           src/changes/ChangesWidget_exclude.cpp      \
-           src/changes/ChangesWidget_prepared.cpp     \
-           src/tf_request/TFRequest.cpp               \
-           src/config/Config.cpp                      \
-           src/methods.cpp                            \
-           src/settings/SettingsDialog.cpp            \
-           src/settings/SettingsDialog_azure.cpp      \
-           src/settings/SettingsDialog_common.cpp     \
-           src/projects_tree/ProjectsTree.cpp         \
-           src/history/HistoryWidget.cpp              \
-           src/history_detail/HistoryDetailWidget.cpp \
-           src/workspaces/NewWorkspaceDialog.cpp      \
-           src/workspaces/WorkspacesDialog.cpp
+SOURCES += $$PWD/main.cpp                                   \
+           $$PWD/src/AppLetTF.cpp                           \
+           $$PWD/src/azure_tree/AzureTreeDialog.cpp         \
+           $$PWD/src/changes/ChangesWidget.cpp              \
+           $$PWD/src/changes/ChangesWidget_detected.cpp     \
+           $$PWD/src/changes/ChangesWidget_exclude.cpp      \
+           $$PWD/src/changes/ChangesWidget_prepared.cpp     \
+           $$PWD/src/tf_request/TFRequest.cpp               \
+           $$PWD/src/config/Config.cpp                      \
+           $$PWD/src/methods.cpp                            \
+           $$PWD/src/settings/SettingsDialog.cpp            \
+           $$PWD/src/settings/SettingsDialog_azure.cpp      \
+           $$PWD/src/settings/SettingsDialog_common.cpp     \
+           $$PWD/src/projects_tree/ProjectsTree.cpp         \
+           $$PWD/src/history/HistoryWidget.cpp              \
+           $$PWD/src/history_detail/HistoryDetailWidget.cpp \
+           $$PWD/src/workspaces/NewWorkspaceDialog.cpp      \
+           $$PWD/src/workspaces/WorkspacesDialog.cpp
 
-FORMS   += src/AppLetTF.ui                           \
-           src/azure_tree/AzureTreeDialog.ui         \
-           src/changes/ChangesWidget.ui              \
-           src/settings/SettingsDialog.ui            \
-           src/projects_tree/ProjectsTree.ui         \
-           src/history/HistoryWidget.ui              \
-           src/history_detail/HistoryDetailWidget.ui \
-           src/workspaces/NewWorkspaceDialog.ui      \
-           src/workspaces/WorkspacesDialog.ui
+FORMS   += $$PWD/src/AppLetTF.ui                           \
+           $$PWD/src/azure_tree/AzureTreeDialog.ui         \
+           $$PWD/src/changes/ChangesWidget.ui              \
+           $$PWD/src/settings/SettingsDialog.ui            \
+           $$PWD/src/projects_tree/ProjectsTree.ui         \
+           $$PWD/src/history/HistoryWidget.ui              \
+           $$PWD/src/history_detail/HistoryDetailWidget.ui \
+           $$PWD/src/workspaces/NewWorkspaceDialog.ui      \
+           $$PWD/src/workspaces/WorkspacesDialog.ui
 
-RESOURCES += res/res.qrc
+RESOURCES += $$PWD/res/res.qrc
 
