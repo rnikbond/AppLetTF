@@ -24,7 +24,6 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupUI     ();
     setupArgs   ();
     setupTray   ();
-    setupArgs   ();
 
     qApp->installEventFilter( this );
 

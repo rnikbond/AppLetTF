@@ -45,7 +45,7 @@ Config::Config( const Config& other ) {
     m_tray      = other.m_tray     ;
     m_isLog     = other.m_isLog    ;
     m_isToolBar = other.m_isToolBar;
-    m_geometry = other.m_geometry  ;
+    m_geometry  = other.m_geometry ;
 
     m_azure.tfPath     = other.m_azure.tfPath    ;
     m_azure.diffCmd    = other.m_azure.diffCmd   ;
@@ -142,12 +142,12 @@ void Config::restore() {
     QStringList workfolds;
 
     conf.beginGroup( CONF_GROUP_COMMON );
-    m_tray = conf.value( CONF_PROP_TRAY, false ).toBool();
+    m_tray = conf.value(CONF_PROP_TRAY, false).toBool();
     conf.endGroup();
 
     conf.beginGroup( CONF_GROUP_WINDOW );
-    m_isLog     = conf.value( CONF_PROP_LOG    , true).toBool();
-    m_isToolBar = conf.value( CONF_PROP_TOOLBAR, true).toBool();
+    m_isLog     = conf.value(CONF_PROP_LOG    , true).toBool();
+    m_isToolBar = conf.value(CONF_PROP_TOOLBAR, true).toBool();
     conf.endGroup();
 
     conf.beginGroup( CONF_GROUP_GEOMETRY );
@@ -158,13 +158,13 @@ void Config::restore() {
     conf.endGroup();
 
     conf.beginGroup( CONF_GROUP_AZURE );
-    m_azure.tfPath    = conf.value( CONF_PROP_TF_PATH         , "" ).toString();
-    m_azure.diffCmd   = conf.value( CONF_PROP_DIFF_CMD        , "" ).toString();
-    m_azure.url       = conf.value( CONF_PROP_AZURE_URL       , "" ).toString();
-    m_azure.workspace = conf.value( CONF_PROP_AZURE_WORKSPACE , "" ).toString();
-    workfolds         = conf.value( CONF_PROP_AZURE_WORKFOLDS , {} ).toStringList();
-    m_azure.login     = conf.value( CONF_PROP_AZURE_LOGIN     , "" ).toString();
-    m_azure.password  = conf.value( CONF_PROP_AZURE_PASSWORD  , "" ).toString();
+    m_azure.tfPath    = conf.value(CONF_PROP_TF_PATH         , "").toString();
+    m_azure.diffCmd   = conf.value(CONF_PROP_DIFF_CMD        , "").toString();
+    m_azure.url       = conf.value(CONF_PROP_AZURE_URL       , "").toString();
+    m_azure.workspace = conf.value(CONF_PROP_AZURE_WORKSPACE , "").toString();
+    workfolds         = conf.value(CONF_PROP_AZURE_WORKFOLDS , {}).toStringList();
+    m_azure.login     = conf.value(CONF_PROP_AZURE_LOGIN     , "").toString();
+    m_azure.password  = conf.value(CONF_PROP_AZURE_PASSWORD  , "").toString();
     conf.endGroup();
 
     foreach( const QString& workfold, workfolds ) {
@@ -205,7 +205,7 @@ void Config::operator = ( const Config& other ) {
     m_tray      = other.m_tray     ;
     m_isLog     = other.m_isLog    ;
     m_isToolBar = other.m_isToolBar;
-    m_geometry = other.m_geometry  ;
+    m_geometry  = other.m_geometry ;
 
     m_azure.tfPath     = other.m_azure.tfPath    ;
     m_azure.diffCmd    = other.m_azure.diffCmd   ;
