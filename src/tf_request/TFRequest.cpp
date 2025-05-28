@@ -171,21 +171,25 @@ void TFRequest::mapWorkfold( const QString& azurePath, const QString& localPath,
 
 /*!
  * \brief Загрузка каталога
- * \param dir Путь к каталогу
+ * \param dir     Путь к каталогу
  * \param version Набор изменений (версия)
+ * \param isForce Признак принудительной перезаписи
  *
  * Если \a version не указан, загружается последняя версия.
  */
-void TFRequest::getDir( const QString& dir, const QString& version ) {
+void TFRequest::getDir( const QString& dir, const QString& version , bool isForce ) {
 
     QStringList args = { "get",
         dir,
         "-recursive",
         "-overwrite",
-        //"-force",
         "-noprompt",
         QString("-login:%1,%2").arg(m_config.m_azure.login, m_config.m_azure.password),
     };
+
+    if( isForce ) {
+        args.append( "-force" );
+    }
 
     if( !version.isEmpty() ) {
         args.append( QString("-version:").arg(version) );

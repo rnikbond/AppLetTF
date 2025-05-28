@@ -11,6 +11,7 @@
 #include "methods.h"
 #include "TFRequest.h"
 #include "HistoryWidget.h"
+#include "HelpTreeDialog.h"
 //----------------------------------------
 #include "ProjectsTree.h"
 #include "ui_ProjectsTree.h"
@@ -53,9 +54,10 @@ ProjectsTree::~ProjectsTree() {
 QList<QAction*> ProjectsTree::actions() const {
 
     return {
-             m_cloneLastedAction,
-             m_historyAction    ,
-             m_reloadAction     ,
+             m_cloneLastedAction ,
+             m_historyAction     ,
+             m_reloadAction      ,
+             m_helpAction        ,
            };
 }
 //----------------------------------------------------------------------------------------------------------
@@ -95,6 +97,29 @@ void ProjectsTree::cloneLasted() {
     TFRequest tf;
     tf.setConfig( m_config );
     tf.getDir( path );
+    emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+    if( tf.m_isErr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Клонирование последней версии с принудительной перезаписью всех файлов
+ */
+void ProjectsTree::cloneRewrite() {
+
+    QTreeWidgetItem* item = ui->projectsTree->currentItem();
+    if( item == nullptr ) {
+        return;
+    }
+
+    QString path = item->data(0, AzurePathRole).toString() ;
+
+    TFRequest tf;
+    tf.setConfig( m_config );
+    tf.getDir( path, QString(), true );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
@@ -149,6 +174,16 @@ void ProjectsTree::cloneCertain() {
     if( tf.m_isErr ) {
         QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
     }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Получение справки по командам
+ */
+void ProjectsTree::help() {
+
+    HelpTreeDialog dialog( qobject_cast<QWidget*>(parent()) );
+    dialog.exec();
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -390,6 +425,7 @@ void ProjectsTree::closeHistoryTab( int index ) {
 void ProjectsTree::updateActions() {
 
     m_cloneLastedAction ->setEnabled( false );
+    m_cloneRewriteAction->setEnabled( false );
     m_cloneСertainAction->setEnabled( false );
     m_historyAction     ->setEnabled( false );
 
@@ -399,6 +435,7 @@ void ProjectsTree::updateActions() {
     }
 
     m_cloneLastedAction ->setEnabled( true );
+    m_cloneRewriteAction->setEnabled( true );
     m_cloneСertainAction->setEnabled( true );
     m_historyAction     ->setEnabled( true );
 }
@@ -430,19 +467,29 @@ void ProjectsTree::setConfig( const Config& cfg ) {
  */
 void ProjectsTree::setupActions() {
 
-    m_cloneLastedAction  = new QAction( QIcon(":/save.png"  ), tr("Получить"       ) );
-    m_cloneСertainAction = new QAction( QIcon(":/save.png"  ), tr("Получить версию") );
-    m_historyAction      = new QAction( QIcon(":/list.png"  ), tr("Журнал"         ) );
-    m_reloadAction       = new QAction( QIcon(":/reload.png"), tr("Обновить"       ) );
+    m_cloneLastedAction  = new QAction( QIcon(":/save.png"   ), tr("Получить изменения") );
+    m_cloneRewriteAction = new QAction( QIcon(":/rewrite.png"), tr("Получить элемент"  ) );
+    m_cloneСertainAction = new QAction( QIcon(":/save.png"   ), tr("Получить версию...") );
+    m_historyAction      = new QAction( QIcon(":/list.png"   ), tr("Журнал"            ) );
+    m_reloadAction       = new QAction( QIcon(":/reload.png" ), tr("Обновить"          ) );
+    m_helpAction         = new QAction( QIcon(":/info.png"   ), tr("Справка"           ) );
+
+    m_cloneRewriteAction->setToolTip( tr("Как и обычное клонирование, но заново клонируются все файлы") );
 
     m_reloadAction->setShortcut( QKeySequence(Qt::Key_F5) );
     m_reloadAction->setToolTip( m_reloadAction->toolTip() + " " + m_reloadAction->shortcut().toString() );
     m_reloadAction->setShortcutVisibleInContextMenu( true );
 
+    m_helpAction->setShortcut( QKeySequence(Qt::Key_F1) );
+    m_helpAction->setToolTip( m_helpAction->toolTip() + " " + m_helpAction->shortcut().toString() );
+    m_helpAction->setShortcutVisibleInContextMenu( true );
+
     connect( m_reloadAction      , &QAction::triggered, this, &ProjectsTree::reload       );
     connect( m_historyAction     , &QAction::triggered, this, &ProjectsTree::history      );
     connect( m_cloneLastedAction , &QAction::triggered, this, &ProjectsTree::cloneLasted  );
+    connect( m_cloneRewriteAction, &QAction::triggered, this, &ProjectsTree::cloneRewrite );
     connect( m_cloneСertainAction, &QAction::triggered, this, &ProjectsTree::cloneCertain );
+    connect( m_helpAction        , &QAction::triggered, this, &ProjectsTree::help         );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -453,6 +500,7 @@ void ProjectsTree::setupCtxMenu() {
 
     m_ctxMenu = new QMenu( this );
     m_ctxMenu->addAction( m_cloneLastedAction  );
+    m_ctxMenu->addAction( m_cloneRewriteAction );
     m_ctxMenu->addAction( m_cloneСertainAction );
     m_ctxMenu->addSeparator();
     m_ctxMenu->addAction( m_historyAction    );

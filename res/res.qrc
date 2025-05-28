@@ -18,5 +18,9 @@
         <file>plus.png</file>
         <file>view.png</file>
         <file>maximize.png</file>
+        <file>folder_tree.png</file>
+        <file>res.qrc</file>
+        <file>rewrite.png</file>
+        <file>info.png</file>
     </qresource>
 </RCC>

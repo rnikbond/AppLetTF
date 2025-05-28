@@ -25,7 +25,9 @@ class ProjectsTree : public QWidget {
     QAction* m_reloadAction      ;
     QAction* m_historyAction     ;
     QAction* m_cloneLastedAction ;
+    QAction* m_cloneRewriteAction;
     QAction* m_cloneСertainAction;
+    QAction* m_helpAction        ;
 
     Config m_config;
     QMap<QString, QTreeWidgetItem*> m_treeItems;
@@ -40,9 +42,11 @@ public:
     void reload();
     void clear();
 
-    void cloneLasted();
+    void cloneLasted ();
+    void cloneRewrite();
     void cloneCertain();
     void history();
+    void help();
 
     QList<QAction*> actions() const;
 

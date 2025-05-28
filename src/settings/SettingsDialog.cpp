@@ -127,7 +127,7 @@ void SettingsDialog::selectPage( QListWidgetItem* itemPage, QListWidgetItem* ) {
 void SettingsDialog::initPages() {
 
     QListWidgetItem* itemCommon = new QListWidgetItem;
-    QListWidgetItem* itemAzure = new QListWidgetItem;
+    QListWidgetItem* itemAzure  = new QListWidgetItem;
 
     itemCommon->setText( tr("Общее")               );
     itemAzure ->setText( tr("Azure DevOps Server") );

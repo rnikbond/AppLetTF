@@ -249,7 +249,7 @@ void AppLetTF::setupActions() {
     m_logAction      = new QAction( tr("Вывод"         ) );
     m_maximizeAction = new QAction( tr("Подробный вид" ) );
 
-    m_projectsAction->setIcon( QIcon(":/project_tree.png") );
+    m_projectsAction->setIcon( QIcon(":/folder_tree.png" ) );
     m_changesAction ->setIcon( QIcon(":/wait_edit.png"   ) );
     m_settingsAction->setIcon( QIcon(":/settings.png"    ) );
     m_logAction     ->setIcon( QIcon(":/message.png"     ) );
