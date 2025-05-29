@@ -345,13 +345,17 @@ QList<StatusItem> parseStatusDetected( const QStringList& items, const QString& 
         return {}; // В ответе на status должно быть минимум 3 строки
     }
 
-    int idxDetected = items.count() ;
+    int idxDetected = items.count();
     for( int idx = 0; idx < items.count(); idx++ ) {
         const QString& item = items.at(idx);
         if (item.contains("Detected Changes:")) {
             idxDetected = idx;
             break;
         }
+    }
+
+    if( idxDetected == items.count() ) {
+        return {}; // Нет обнаруженных изменений
     }
 
     QStringList detectedFilesInfo;

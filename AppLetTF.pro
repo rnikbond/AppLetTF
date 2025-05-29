@@ -1,6 +1,7 @@
 QT     += core gui widgets
 TARGET  = AppLetTF
 CONFIG += c++17
+CONFIG += console
 
 INCLUDEPATH += $$PWD/src                         \
                $$PWD/src/tf_request              \

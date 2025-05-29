@@ -24,9 +24,9 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
     clear();
     setAsync( false );
 
-    connect( m_tf, QOverload<int,QProcess::ExitStatus>::of(&QProcess::finished)              , this, &TFRequest::reactOnFinished      );
-    connect( m_tf,                                         &QProcess::stateChanged           , this, &TFRequest::reactOnStateChanged  );
-    connect( m_tf,                                         &QProcess::errorOccurred          , this, &TFRequest::reactOnErrorOccurred );
+    connect( m_tf, QOverload<int,QProcess::ExitStatus>::of(&QProcess::finished)    , this, &TFRequest::reactOnFinished      );
+    connect( m_tf,                                         &QProcess::stateChanged , this, &TFRequest::reactOnStateChanged  );
+    connect( m_tf,                                         &QProcess::errorOccurred, this, &TFRequest::reactOnErrorOccurred );
 }
 //----------------------------------------------------------------------------------------------------------
 
