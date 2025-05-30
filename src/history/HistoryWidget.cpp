@@ -1,4 +1,5 @@
 //----------------------------------------
+#include <QDebug>
 #include <QMessageBox>
 //----------------------------------------
 #include "methods.h"
@@ -6,6 +7,9 @@
 //----------------------------------------
 #include "HistoryWidget.h"
 #include "ui_HistoryWidget.h"
+//----------------------------------------
+#define HISTORY_SLICE_SIZE 50
+#define HISTORY_LOAD_ITEM  1
 //----------------------------------------
 
 HistoryWidget::HistoryWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::HistoryWidget)
@@ -64,9 +68,25 @@ void HistoryWidget::showDetail() {
         return;
     }
 
+    // Дозагрузка истории
+    QVariant minChangeSet = item->data(MinChangesetRole);
+    if( minChangeSet.isValid() ) {
+
+        QString changesetFrom = QString::number(minChangeSet.toInt() - 1);
+
+        TFRequest tf;
+        tf.setConfig( m_config );
+        tf.history( m_path, changesetFrom );
+        emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+        ui->historyTable->removeRow( row );
+        insertItems( tf );
+
+        return;
+    }
+
     QString version = item->data(Qt::DisplayRole).toString();
     ui->detail->reload( m_path, version );
-
     ui->detail->show();
 }
 //----------------------------------------------------------------------------------------------------------
@@ -88,8 +108,22 @@ void HistoryWidget::reload( const QString& path ) {
 
     TFRequest tf;
     tf.setConfig( m_config );
-    tf.history( path);
+    tf.history( path );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+    insertItems( tf );
+
+    QHeaderView* hHeader = ui->historyTable->horizontalHeader();
+    hHeader->resizeSections( QHeaderView::ResizeToContents );
+    hHeader->resizeSection( hHeader->count() - 1, QHeaderView::Stretch );
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Добавление элементов журнала из ответа TF
+ * \param tf Объект TF с выполненым запросм "tf history ..."
+ */
+void HistoryWidget::insertItems( TFRequest& tf ) {
 
     if( tf.m_isErr ) {
         QMessageBox::critical( this, tr("Ошибка"), tf.m_errText );
@@ -98,7 +132,9 @@ void HistoryWidget::reload( const QString& path ) {
 
     QList<HistoryItem> historyItems = parseHistory( tf.m_response );
 
-    int row = 0;
+    int row          = ui->historyTable->rowCount();
+    int minChangeset = 0;
+    int countInsert  = 0;
     foreach( const HistoryItem& historyItem, historyItems) {
 
         ui->historyTable->insertRow( row );
@@ -113,12 +149,26 @@ void HistoryWidget::reload( const QString& path ) {
         ui->historyTable->setItem( row, ColumnDateTime, itemDate    );
         ui->historyTable->setItem( row, ColumnComment , itemComment );
 
+        int changeSet = historyItem.version.toInt();
+        if( minChangeset == 0 || minChangeset > changeSet ) {
+            minChangeset = changeSet;
+        }
+
+        countInsert++;
         row++;
     }
 
-    QHeaderView* hHeader = ui->historyTable->horizontalHeader();
-    hHeader->resizeSections( QHeaderView::ResizeToContents );
-    hHeader->resizeSection( hHeader->count() - 1, QHeaderView::Stretch );
+    // Добавление строки в конец для дозагрузки
+    if( minChangeset > 0 && countInsert == HISTORY_SLICE_SIZE ) {
+        QTableWidgetItem* loadItem = new QTableWidgetItem( tr("Загрузить еще...") );
+        loadItem->setTextAlignment( Qt::AlignCenter );
+        loadItem->setForeground( QBrush(Qt::darkGreen) );
+        loadItem->setData( MinChangesetRole, minChangeset );
+
+        ui->historyTable->insertRow( row );
+        ui->historyTable->setItem( row, ColumnVersion, loadItem );
+        ui->historyTable->setSpan( row, ColumnVersion, 1, ColumnCount );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 

@@ -355,13 +355,13 @@ void TFRequest::view( const QString& file, const QString& version ) {
 }
 //----------------------------------------------------------------------------------------------------------
 
-#include <cstdlib>
-
 /*!
  * \brief Получение журнала изменений
- * \param path Путь к элементу, у которого нужно получить журнал изменений
+ * \param path      Путь к элементу, у которого нужно получить журнал изменений
+ * \param from      С какого набора изменений начать загрузку. По-умолчанию "T" - последний набор изменений.
+ * \param stopAfter Сколько наборов изменений загржать. По-умолчанию 50.
  */
-void TFRequest::history( const QString& path ) {
+void TFRequest::history( const QString& path , const QString& from, int stopAfter ) {
 
     // tf hist[ory]                         -
     // itemspec                             -
@@ -382,6 +382,8 @@ void TFRequest::history( const QString& path ) {
         "-recursive",
         //QString("-collection:%1").arg(m_config.m_azure.url),
         //"-noprompt",
+        QString("-version:%1"  ).arg(from),
+        QString("-stopafter:%1").arg(stopAfter),
         path
     };
 

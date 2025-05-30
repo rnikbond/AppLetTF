@@ -9,6 +9,8 @@
 //----------------------------------------
 namespace Ui { class HistoryWidget; }
 //----------------------------------------
+class TFRequest;
+//----------------------------------------
 struct HistoryItem;
 //----------------------------------------
 
@@ -27,6 +29,10 @@ class HistoryWidget : public QWidget {
     enum ColumnsDetail {
         ColumnCaption  = 0,
         ColumnValue    = 1,
+    };
+
+    enum CustomRoles {
+        MinChangesetRole = Qt::UserRole + 1,
     };
 
     QString m_path;
@@ -48,6 +54,8 @@ private:
 
     void showCtxMenu( const QPoint& pos );
     void showDetail();
+
+    void insertItems( TFRequest& tf );
 
 private:
 

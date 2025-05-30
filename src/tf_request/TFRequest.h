@@ -64,7 +64,7 @@ public: // Requests
     void cancelChanges( const QStringList& pathes );
     void commit( const QString& comment, const QStringList& files );
 
-    void history( const QString& path );
+    void history( const QString& path, const QString& from = "T", int stopAfter = 50 );
     void historyCertain( const QString& path, const QString& version );
     void historyDiffPrev( const QString& path, const QString& version );
 
