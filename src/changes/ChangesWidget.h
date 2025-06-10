@@ -57,6 +57,7 @@ private: // Prepared Tree
     void reactOnPreparedDiff();
     void reactOnPreparedCancel();
     void reactOnPreparedExclude();
+    void reactOnPartSelectCheck();
 
     void updateCommitSize();
     void updatePreparedActions();

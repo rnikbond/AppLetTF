@@ -89,6 +89,13 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="partSelectCheck">
+         <property name="text">
+          <string>Частичная запись изменений</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QTreeWidget" name="preparedTree">
          <column>
           <property name="text">

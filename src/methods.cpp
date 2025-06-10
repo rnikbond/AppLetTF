@@ -545,6 +545,10 @@ QPixmap icon( const QString& name , int fileType ) {
         image = qApp->style()->standardIcon(QStyle::SP_FileIcon).pixmap(imageSize);
     }
 
+    if( image.isNull() ) {
+        image = QPixmap(":/file_blue.png");
+    }
+
     return image;
 }
 //----------------------------------------------------------------------------------------------------------
@@ -580,7 +584,7 @@ QPixmap joinIconsFile( const QString& fileName, const QString& iconPath ) {
  */
 QString workDirPath() {
 
-    return QString("%1/%2").arg(QDir::homePath(), workDirName());
+    return QString("%1/.config/%2").arg(QDir::homePath(), workDirName());
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -589,7 +593,7 @@ QString workDirPath() {
  * \return Имя
  */
 QString workDirName() {
-    return ".applettf";
+    return "applettf";
 }
 //----------------------------------------------------------------------------------------------------------
 

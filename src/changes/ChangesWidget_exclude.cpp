@@ -105,6 +105,7 @@ void ChangesWidget::reloadExcluded() {
     ui->excludedTree->expandAll();
 
     updateExcludeActions();
+    saveData();
 }
 //----------------------------------------------------------------------------------------------------------
 

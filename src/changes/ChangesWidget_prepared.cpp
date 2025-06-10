@@ -27,13 +27,23 @@ void ChangesWidget::reactOnCommit() {
 
     QStringList changeFiles;
 
+    bool isOnlyChecked = ui->partSelectCheck->isChecked();
+
     QTreeWidgetItemIterator itemIt( ui->preparedTree, QTreeWidgetItemIterator::All );
     while( *itemIt ) {
         QTreeWidgetItem* item = *itemIt;
-        if( item->childCount() == 0 ) {
-            QString path = item->data(0, LocalPathRole).toString();
-            changeFiles.append( path );
+        if( item->childCount() != 0 ) {
+            itemIt++;
+            continue;
         }
+
+        if( isOnlyChecked && item->checkState(0) != Qt::Checked ) {
+            itemIt++;
+            continue;
+        }
+
+        QString path = item->data(0, LocalPathRole).toString();
+        changeFiles.append( path );
         itemIt++;
     }
 
@@ -160,6 +170,25 @@ void ChangesWidget::reactOnPreparedExclude() {
 //----------------------------------------------------------------------------------------------------------
 
 /*!
+ * \brief Обработка установки признака частичного коммита
+ */
+void ChangesWidget::reactOnPartSelectCheck() {
+
+    bool isPart = ui->partSelectCheck->isChecked();
+
+    QTreeWidgetItemIterator itemIt( ui->preparedTree, QTreeWidgetItemIterator::All );
+    while( *itemIt ) {
+        QTreeWidgetItem* item = *itemIt;
+        if( item->childCount() == 0 ) {
+            QVariant state = isPart ? Qt::Unchecked : QVariant();
+            item->setData( 0, Qt::CheckStateRole, state );
+        }
+        itemIt++;
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
  * \brief Отображение контекстного меню в дереве подготовленных (ожидающих) изменений
  * \param pos Позиция для отображения
  */
@@ -270,9 +299,11 @@ void ChangesWidget::reloadPrepared() {
         fileItem->setData( 0, LocalPathRole     , item.path      );
         fileItem->setData( 0, StatusRole        , item.status    );
         fileItem->setData( 0, TypeRole          , TypeFile       );
+        fileItem->setData( 0, Qt::CheckStateRole, Qt::Unchecked  );
     }
 
     ui->preparedTree->expandAll();
+    reactOnPartSelectCheck();
     updatePreparedActions();
 }
 //----------------------------------------------------------------------------------------------------------
@@ -321,6 +352,7 @@ void ChangesWidget::setupPrepared() {
     m_preparedDiffAction  ->setToolTip( tr("Сравнить выбранный файл с последней версией") );
     m_preparedCancelAction->setToolTip( tr("Отменить изменения") );
     m_excludeAction       ->setToolTip( tr("Исключить") );
+    ui->partSelectCheck   ->setToolTip( tr("Позволяет коммитить только выбранный файлы") );
 
     ui->preparedTree->header()->hide();
     ui->preparedTree->setContextMenuPolicy( Qt::CustomContextMenu );
@@ -334,6 +366,7 @@ void ChangesWidget::setupPrepared() {
     connect( m_preparedDiffAction  , &QAction    ::triggered                 , this, &ChangesWidget::reactOnPreparedDiff          );
     connect( m_preparedCancelAction, &QAction    ::triggered                 , this, &ChangesWidget::reactOnPreparedCancel        );
     connect( m_excludeAction       , &QAction    ::triggered                 , this, &ChangesWidget::reactOnPreparedExclude       );
+    connect( ui->partSelectCheck   , &QCheckBox  ::clicked                   , this, &ChangesWidget::reactOnPartSelectCheck       );
     connect( ui->preparedTree      , &QTreeWidget::customContextMenuRequested, this, &ChangesWidget::reactOnPreparedMenuRequested );
     connect( ui->preparedTree      , &QTreeWidget::currentItemChanged        , this, &ChangesWidget::updatePreparedActions        );
     connect( ui->commitButton      , &QPushButton::clicked                   , this, &ChangesWidget::reactOnCommit                );
