@@ -1,2 +1,2 @@
 # AppLetTFS
-кроссплатформенный оконный клиет Team Foundation Server
+Оконный клиет Team Foundation Server для Linux.
