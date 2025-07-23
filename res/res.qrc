@@ -24,5 +24,6 @@
         <file>info.png</file>
         <file>file_blue.png</file>
         <file>file_gray.png</file>
+        <file>new_file.png</file>
     </qresource>
 </RCC>

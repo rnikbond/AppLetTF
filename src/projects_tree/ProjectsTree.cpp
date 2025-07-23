@@ -1,6 +1,8 @@
 //----------------------------------------
 #include <QTime>
+#include <QDebug>
 #include <QToolBar>
+#include <QFileDialog>
 #include <QMessageBox>
 #include <QTableWidget>
 #include <QInputDialog>
@@ -56,6 +58,7 @@ QList<QAction*> ProjectsTree::actions() const {
     return {
              m_cloneLastedAction ,
              m_historyAction     ,
+             m_addAction         ,
              m_reloadAction      ,
              m_helpAction        ,
            };
@@ -169,6 +172,44 @@ void ProjectsTree::cloneCertain() {
     }
 
     tf.getDir( path, version );
+    emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+
+    if( tf.m_isErr ) {
+        QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Выбор и добавление нового файла в проект
+ */
+void ProjectsTree::addNewFile() {
+
+    QString path;
+
+    QTreeWidgetItem* currentItem = ui->projectsTree->currentItem();
+    if( currentItem != nullptr ) {
+        path = currentItem->data(0, AzurePathRole).toString();
+    }
+
+    for( auto it = m_config.m_azure.workfoldes.keyValueBegin(); it != m_config.m_azure.workfoldes.keyValueEnd(); it++ ) {
+        const QString& azurePath = it->first;
+        const QString& localPath = it->second;
+
+        if( path.contains(azurePath) ) {
+            path = path.replace( azurePath, localPath );
+            break;
+        }
+    }
+
+    QString filePath = QFileDialog::getOpenFileName( this, tr("Добавление нового файла"), path );
+    if( filePath.isEmpty() ) {
+        return;
+    }
+
+    TFRequest tf;
+    tf.setConfig( m_config );
+    tf.add( {filePath} );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
 
     if( tf.m_isErr ) {
@@ -428,10 +469,15 @@ void ProjectsTree::updateActions() {
     m_cloneRewriteAction->setEnabled( false );
     m_cloneСertainAction->setEnabled( false );
     m_historyAction     ->setEnabled( false );
+    m_addAction         ->setEnabled( false );
 
     QTreeWidgetItem* item = ui->projectsTree->currentItem();
     if( item == nullptr ) {
         return;
+    }
+
+    if( item->data(0, TypeRole).toInt() == TypeFolder ) {
+        m_addAction->setEnabled( true );
     }
 
     m_cloneLastedAction ->setEnabled( true );
@@ -467,12 +513,13 @@ void ProjectsTree::setConfig( const Config& cfg ) {
  */
 void ProjectsTree::setupActions() {
 
-    m_cloneLastedAction  = new QAction( QIcon(":/save.png"   ), tr("Получить изменения") );
-    m_cloneRewriteAction = new QAction( QIcon(":/rewrite.png"), tr("Получить элемент"  ) );
-    m_cloneСertainAction = new QAction( QIcon(":/save.png"   ), tr("Получить версию...") );
-    m_historyAction      = new QAction( QIcon(":/list.png"   ), tr("Журнал"            ) );
-    m_reloadAction       = new QAction( QIcon(":/reload.png" ), tr("Обновить"          ) );
-    m_helpAction         = new QAction( QIcon(":/info.png"   ), tr("Справка"           ) );
+    m_cloneLastedAction  = new QAction( QIcon(":/save.png"    ), tr("Получить изменения") );
+    m_cloneRewriteAction = new QAction( QIcon(":/rewrite.png" ), tr("Получить элемент"  ) );
+    m_cloneСertainAction = new QAction( QIcon(":/save.png"    ), tr("Получить версию...") );
+    m_historyAction      = new QAction( QIcon(":/list.png"    ), tr("Журнал"            ) );
+    m_reloadAction       = new QAction( QIcon(":/reload.png"  ), tr("Обновить"          ) );
+    m_addAction          = new QAction( QIcon(":/new_file.png"), tr("Добавить файл"     ) );
+    m_helpAction         = new QAction( QIcon(":/info.png"    ), tr("Справка"           ) );
 
     m_cloneRewriteAction->setToolTip( tr("Как и обычное клонирование, но заново клонируются все файлы") );
 
@@ -489,6 +536,7 @@ void ProjectsTree::setupActions() {
     connect( m_cloneLastedAction , &QAction::triggered, this, &ProjectsTree::cloneLasted  );
     connect( m_cloneRewriteAction, &QAction::triggered, this, &ProjectsTree::cloneRewrite );
     connect( m_cloneСertainAction, &QAction::triggered, this, &ProjectsTree::cloneCertain );
+    connect( m_addAction         , &QAction::triggered, this, &ProjectsTree::addNewFile   );
     connect( m_helpAction        , &QAction::triggered, this, &ProjectsTree::help         );
 }
 //----------------------------------------------------------------------------------------------------------
@@ -503,7 +551,9 @@ void ProjectsTree::setupCtxMenu() {
     m_ctxMenu->addAction( m_cloneRewriteAction );
     m_ctxMenu->addAction( m_cloneСertainAction );
     m_ctxMenu->addSeparator();
-    m_ctxMenu->addAction( m_historyAction    );
+    m_ctxMenu->addAction( m_addAction );
+    m_ctxMenu->addSeparator();
+    m_ctxMenu->addAction( m_historyAction );
     m_ctxMenu->addSeparator();
     m_ctxMenu->addAction( m_reloadAction );
 }
