@@ -53,8 +53,8 @@ Workspace WorkspacesDialog::selectedWorkspace() const {
 
         QStringList parts = path.split( " -> " );
         WorkfoldItem workfold;
-        workfold.pathServer = parts[0];
-        workfold.pathLocal  = parts[1];
+        workfold.pathServer = parts[0].trimmed();
+        workfold.pathLocal  = parts[1].trimmed();
 
         workspace.workfolds.append( workfold );
     }
