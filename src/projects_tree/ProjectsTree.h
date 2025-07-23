@@ -27,7 +27,8 @@ class ProjectsTree : public QWidget {
     QAction* m_cloneLastedAction ;
     QAction* m_cloneRewriteAction;
     QAction* m_cloneСertainAction;
-    QAction* m_addAction         ;
+    QAction* m_appendFileAction  ;
+    QAction* m_deleteAction      ;
     QAction* m_helpAction        ;
 
     Config m_config;
@@ -48,6 +49,7 @@ public:
     void cloneCertain();
     void history     ();
     void addNewFile  ();
+    void deleteItem();
     void help();
 
     QList<QAction*> actions() const;
