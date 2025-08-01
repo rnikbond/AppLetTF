@@ -14,6 +14,8 @@ class QToolButton;
 class QTreeWidget;
 class QTreeWidgetItem;
 //----------------------------------------
+class TFRequest;
+//----------------------------------------
 
 class ChangesWidget : public QWidget {
 
@@ -51,6 +53,7 @@ private: // Prepared Tree
 
     void setupPrepared ();
     void reloadPrepared();
+    void reloadPrepared( const QMap<QString, TFRequest*>& responses );
 
     void reactOnCommit();
     void reactOnPreparedMenuRequested( const QPoint& pos );
@@ -70,6 +73,8 @@ private: // Detected Tree
 
     void setupDetected ();
     void reloadDetected();
+    void reloadDetected( const QMap<QString, TFRequest*>& responses );
+
     void reactOnDetectedMenuRequested( const QPoint& pos );
     void reactOnDetectedApply();
 

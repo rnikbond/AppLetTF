@@ -60,21 +60,46 @@ void ChangesWidget::reactOnDetectedMenuRequested( const QPoint& pos ) {
  */
 void ChangesWidget::reloadDetected() {
 
-    QStringList pathFiles;
-    QList<StatusItem> items;
-
+    QMap<QString, TFRequest*> responses;
     foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
 
-        TFRequest tf;
-        tf.setConfig( m_config );
-        tf.status( dirLocal );
-        emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+        TFRequest* tf = new TFRequest( this );
+        tf->setConfig( m_config );
+        tf->status( dirLocal );
+        emit commandExecuted( tf->m_isErr, tf->m_errCode, tf->m_errText, tf->m_response );
 
-        if( tf.m_isErr ) {
+        if( tf->m_isErr ) {
+            delete tf;
             continue;
         }
 
-        QList<StatusItem> itemsWorkfold = parseStatusDetected( tf.m_response, dirLocal );
+        responses[dirLocal] = tf;
+    }
+
+    reloadDetected( responses );
+
+    foreach( TFRequest* tf, responses ) {
+        delete tf;
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Перезагрузка дерева обнаруженных изменений
+ * \param responses Список ответов за запросы по сопоставленным каталогам
+ */
+void ChangesWidget::reloadDetected( const QMap<QString, TFRequest*>& responses ) {
+
+    QStringList pathFiles;
+    QList<StatusItem> items;
+
+    // Получение списка изменений по сопоставленным каталогам
+    for( QMap<QString, TFRequest*>::const_iterator it = responses.constBegin(); it != responses.constEnd(); ++it ) {
+
+        const QString& dirLocal = it.key();
+        TFRequest* tf = it.value();
+
+        QList<StatusItem> itemsWorkfold = parseStatusDetected( tf->m_response, dirLocal );
         for( int idx = 0; idx < itemsWorkfold.count(); idx++ ) {
             const StatusItem& item = itemsWorkfold.at( idx );
             pathFiles.append( item.path );

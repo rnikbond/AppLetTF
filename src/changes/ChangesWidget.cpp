@@ -144,12 +144,31 @@ void ChangesWidget::reload() {
 
     m_reloadState = true;
 
-    reloadPrepared();
+    QMap<QString, TFRequest*> responses;
+    foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
+        TFRequest* tf = new TFRequest( this );
+        tf->setConfig( m_config );
+        tf->status( dirLocal );
+        emit commandExecuted( tf->m_isErr, tf->m_errCode, tf->m_errText, tf->m_response );
+
+        if( tf->m_isErr ) {
+            delete tf;
+            continue;
+        }
+
+        responses[dirLocal] = tf;
+    }
+
+    reloadPrepared( responses );
     reloadExcluded();
-    reloadDetected();
+    reloadDetected( responses );
 
     m_reloadAction->setText   ( tr("Обновить [%1]").arg(QTime::currentTime().toString("hh:mm"   )) );
     m_reloadAction->setToolTip( tr("Обновлено: %1").arg(QTime::currentTime().toString("hh:mm:ss")) );
+
+    foreach( TFRequest* tf, responses ) {
+        delete tf;
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 

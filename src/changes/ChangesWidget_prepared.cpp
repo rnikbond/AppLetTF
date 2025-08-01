@@ -203,22 +203,46 @@ void ChangesWidget::reactOnPreparedMenuRequested( const QPoint& pos ) {
  */
 void ChangesWidget::reloadPrepared() {
 
+    QMap<QString, TFRequest*> responses;
+    foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
+
+        TFRequest* tf = new TFRequest( this );
+        tf->setConfig( m_config );
+        tf->status( dirLocal );
+        emit commandExecuted( tf->m_isErr, tf->m_errCode, tf->m_errText, tf->m_response );
+
+        if( tf->m_isErr ) {
+            delete tf;
+            continue;
+        }
+
+        responses[dirLocal] = tf;
+    }
+
+    reloadPrepared( responses );
+
+    foreach( TFRequest* tf, responses ) {
+        delete tf;
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Перезагрузка дерева подготовленных (ожидающих) изменений
+ * \param responses Список ответов за запросы по сопоставленным каталогам
+ */
+void ChangesWidget::reloadPrepared( const QMap<QString, TFRequest*>& responses ) {
+
     QStringList pathFiles;
     QList<StatusItem> items;
 
     // Получение списка изменений по сопоставленным каталогам
-    foreach( const QString& dirLocal, m_config.m_azure.workfoldes ) {
+    for( QMap<QString, TFRequest*>::const_iterator it = responses.constBegin(); it != responses.constEnd(); ++it ) {
 
-        TFRequest tf;
-        tf.setConfig( m_config );
-        tf.status( dirLocal );
-        emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
+        const QString& dirLocal = it.key();
+        TFRequest* tf = it.value();
 
-        if( tf.m_isErr ) {
-            continue;
-        }
-
-        QList<StatusItem> itemsWorkfold = parseStatusPrepared(tf.m_response, dirLocal);
+        QList<StatusItem> itemsWorkfold = parseStatusPrepared(tf->m_response, dirLocal);
 
         for( int idx = 0; idx < itemsWorkfold.count(); idx++ ) {
             const StatusItem& item = itemsWorkfold.at( idx );
