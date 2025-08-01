@@ -109,6 +109,10 @@ void ProjectsTree::cloneLasted() {
     }
 
     setClonedItem( item );
+
+    if( tf.m_response.count() == 1 && tf.m_response.at(0).contains("All files up to date", Qt::CaseInsensitive) ) {
+        QMessageBox::information( this, tr("Загрузка изменений"), tr("Новых изменений нет"), QMessageBox::Close );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
