@@ -59,6 +59,7 @@ private:
     void expand( QTreeWidgetItem* item );
     void expand( QTreeWidgetItem* item, int );
     void createTreeItems( QTreeWidgetItem* parent, const QList<AzureItem>& entries );
+    void setClonedItem( QTreeWidgetItem* item );
     void setCurrentProject( const QString& path );
 
     HistoryWidget* historyTab( const QString& path );

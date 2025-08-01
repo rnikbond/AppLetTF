@@ -105,7 +105,10 @@ void ProjectsTree::cloneLasted() {
 
     if( tf.m_isErr ) {
         QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+        return;
     }
+
+    setClonedItem( item );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -128,7 +131,10 @@ void ProjectsTree::cloneRewrite() {
 
     if( tf.m_isErr ) {
         QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+        return;
     }
+
+    setClonedItem( item );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -177,7 +183,10 @@ void ProjectsTree::cloneCertain() {
 
     if( tf.m_isErr ) {
         QMessageBox::warning( this, tr("Ошибка"), tf.m_errText, QMessageBox::Close );
+        return;
     }
+
+    setClonedItem( item );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -411,29 +420,63 @@ void ProjectsTree::expand( QTreeWidgetItem* item ) {
  */
 void ProjectsTree::createTreeItems( QTreeWidgetItem* parent, const QList<AzureItem>& entries ) {
 
+    auto toLocalPath = [&]( const QString& azureItemPath ) {
+        QString path;
+        for( auto it = m_config.m_azure.workfoldes.keyValueBegin(); it != m_config.m_azure.workfoldes.keyValueEnd(); it++ ) {
+            const QString& azurePath = it->first;
+            const QString& localPath = it->second;
+
+            if( azureItemPath.contains(azurePath) ) {
+                path = QString(azureItemPath).replace( azurePath, localPath );
+                break;
+            }
+        }
+        return path;
+    };
+
     QList<QTreeWidgetItem*> items;
 
     for( const AzureItem& entry : entries ) {
 
-        QString path = entry.folder + "/" + entry.name;
+        QString azurePath = entry.folder + "/" + entry.name;
         QTreeWidgetItem* newItem = new QTreeWidgetItem;
         newItem->setText( 0, entry.name                   );
         newItem->setIcon( 0, icon(entry.name, entry.type) );
         newItem->setData( 0, TypeRole       , entry.type  );
-        newItem->setData( 0, AzurePathRole  , path        );
+        newItem->setData( 0, AzurePathRole  , azurePath   );
+
+        QString localPath = toLocalPath( azurePath );
+        QFileInfo fileInfo( localPath );
+        if( !fileInfo.exists() ) {
+            newItem->setForeground( 0, Qt::darkGray );
+        }
 
         if( entry.type == TypeFolder ) {
             newItem->setChildIndicatorPolicy( QTreeWidgetItem::ShowIndicator );
         }
 
         items.append( newItem );
-        m_treeItems[path] = newItem;
+        m_treeItems[azurePath] = newItem;
     }
 
     if( parent == nullptr ) {
         ui->projectsTree->addTopLevelItems( items );
     } else {
         parent->addChildren( items );
+    }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Установка признака склонированного элемента
+ * \param item Указатель на элемент
+ */
+void ProjectsTree::setClonedItem( QTreeWidgetItem* item ) {
+
+    item->setForeground( 0, QBrush() );
+    for( int idx = 0; idx < item->childCount(); idx++ ) {
+        QTreeWidgetItem* childItem = item->child( idx );
+        setClonedItem( childItem );
     }
 }
 //----------------------------------------------------------------------------------------------------------
