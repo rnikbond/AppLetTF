@@ -17,6 +17,8 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
     m_codec = QTextCodec::codecForName("utf8");
 #endif
 
+    m_cmd           = CmdNone;
+    m_cache         = nullptr;
     m_isTouchCursor = true;
 
     m_tf = new QProcess( this );
@@ -56,7 +58,7 @@ void TFRequest::checkConnection() {
  */
 void TFRequest::workspaces() {
 
-    m_cmd = CommandWorkspaces;
+    m_cmd = CmdWorkspaces;
 
     QStringList args = {
         "workspaces",
@@ -179,6 +181,8 @@ void TFRequest::mapWorkfold( const QString& azurePath, const QString& localPath,
  */
 void TFRequest::getDir( const QString& dir, const QString& version , bool isForce ) {
 
+    m_cmd = version.isEmpty() ? CmdGetLastest : CmdGetVersion;
+
     QStringList args = { "get",
         dir,
         "-recursive",
@@ -208,6 +212,8 @@ void TFRequest::getDir( const QString& dir, const QString& version , bool isForc
  * \param path Путь к элементу
  */
 void TFRequest::status( const QString& path ) {
+
+    m_cmd = CmdStatus;
 
     QStringList args = {
         "status",
@@ -362,6 +368,9 @@ void TFRequest::view( const QString& file, const QString& version ) {
  * \param stopAfter Сколько наборов изменений загржать. По-умолчанию 50.
  */
 void TFRequest::history( const QString& path , const QString& from, int stopAfter ) {
+
+    m_cmd = CmdHistory;
+    qDebug() << "history: " << path;
 
     // tf hist[ory]                         -
     // itemspec                             -
@@ -629,6 +638,38 @@ void TFRequest::parseResponse() {
     }
 
     m_response = m_codec->toUnicode(m_tf->readAllStandardOutput()).split("\n", Qt::SkipEmptyParts);
+
+    updateCache();
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Обновленеи информации в кэше
+ */
+void TFRequest::updateCache() {
+
+    if( m_cache == nullptr ) {
+        return;
+    }
+
+    switch( m_cmd ) {
+        case CmdGetLastest:
+        break;
+
+        case CmdStatus:
+        break;
+
+        case CmdHistory: {
+            QList<HistoryItem> historyItems = parseHistory( m_response );
+            for( HistoryItem item : historyItems ) {
+                qDebug() << item.version;
+            }
+
+            break;
+        }
+        default: break;
+    }
+
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -657,6 +698,16 @@ void TFRequest::setConfig( const Config& cfg ) {
         QString path = m_config.m_azure.workfoldes.begin().value();
         m_tf->setWorkingDirectory( path );
     }
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Инициализация объекта кэширования
+ * \param cache Объект кэширования
+ */
+void TFRequest::setCache( ChangesetCache* cache ) {
+
+    m_cache = cache;
 }
 //----------------------------------------------------------------------------------------------------------
 

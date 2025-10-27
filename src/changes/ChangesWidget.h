@@ -80,6 +80,8 @@ private: // Detected Tree
 
     void updateDetectedActions();
 
+    void itemsPathRecursive( QTreeWidgetItem* item, QStringList& out ) const;
+
 private: // Exclude Tree
 
     QMenu      * m_excludeCtxMenu;

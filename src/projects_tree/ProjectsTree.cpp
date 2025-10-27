@@ -523,6 +523,7 @@ HistoryWidget* ProjectsTree::historyTab( const QString& path ) {
 
     // Создание новой вкладки журнала
     HistoryWidget* historyWidget = new HistoryWidget( ui->historyTab );
+    historyWidget->setCache ( m_cache  );
     historyWidget->setConfig( m_config );
     historyWidget->reload( path );
     connect( historyWidget, &HistoryWidget::commandExecuted, this, &ProjectsTree::commandExecuted   );
@@ -597,6 +598,15 @@ void ProjectsTree::setConfig( const Config& cfg ) {
 
     m_config = cfg;
     reload();
+}
+//----------------------------------------------------------------------------------------------------------
+
+/*!
+ * \brief Инициализация объекта кэширования
+ * \param cache Объект кэширования
+ */
+void ProjectsTree::setCache( ChangesetCache* cache ) {
+    m_cache = cache;
 }
 //----------------------------------------------------------------------------------------------------------
 

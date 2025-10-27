@@ -24,14 +24,15 @@ void ChangesWidget::reactOnDetectedApply() {
         return;
     }
 
-    QString path = item->data(0, LocalPathRole).toString();
-    int status   = item->data(0, StatusRole   ).toInt();
+    QStringList pathes;
+    int status = item->data(0, StatusRole   ).toInt();
+    itemsPathRecursive( item, pathes );
 
     TFRequest tf;
     tf.setConfig( m_config );
     switch( status ) {
-        case StatusNew   : tf.add   ({path}); break;
-        case StatusDelete: tf.remove({path}); break;
+        case StatusNew   : tf.add   (pathes); break;
+        case StatusDelete: tf.remove(pathes); break;
         default          : return;
     }
 
@@ -42,6 +43,19 @@ void ChangesWidget::reactOnDetectedApply() {
     }
 
    reload();
+}
+//----------------------------------------------------------------------------------------------------------
+
+void ChangesWidget::itemsPathRecursive( QTreeWidgetItem* item, QStringList& out ) const {
+
+    if( item->data(0, TypeRole).toInt() == TypeFile ) {
+        out.append( item->data(0, LocalPathRole).toString() );
+    }
+
+    for( int idx = 0; idx < item->childCount(); idx++ ) {
+        QTreeWidgetItem* childItem = item->child(idx);
+        itemsPathRecursive( childItem, out );
+    }
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -165,6 +179,8 @@ void ChangesWidget::reloadDetected( const QMap<QString, TFRequest*>& responses )
         }
 
         QTreeWidgetItem* dirItem = m_detectedDirItems[dirPath];
+        dirItem->setData( 0, StatusRole, item.status );
+
         QTreeWidgetItem* fileItem = new QTreeWidgetItem( dirItem );
         fileItem->setIcon( 0, joinIconsFile(fileName, iconPath)  );
         fileItem->setData( 0, Qt::DisplayRole   , fileName       );

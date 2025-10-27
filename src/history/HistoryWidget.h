@@ -6,6 +6,7 @@
 #include <QWidget>
 //----------------------------------------
 #include "Config.h"
+#include "ChangesetCache.h"
 //----------------------------------------
 namespace Ui { class HistoryWidget; }
 //----------------------------------------
@@ -37,6 +38,7 @@ class HistoryWidget : public QWidget {
 
     QString m_path;
     Config  m_config;
+    ChangesetCache* m_cache;
 
     QMenu  * m_ctxMenu     ;
     QAction* m_detailAction;
@@ -47,6 +49,7 @@ public:
     ~HistoryWidget();
 
     void setConfig( const Config& cfg );
+    void setCache ( ChangesetCache* cache );
     void reload( const QString& path );
     QString path() const;
 

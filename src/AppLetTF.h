@@ -6,6 +6,7 @@
 #include <QSystemTrayIcon>
 //----------------------------------------
 #include "Config.h"
+#include "ChangesetCache.h"
 //----------------------------------------
 namespace Ui { class AppLetTF; }
 //----------------------------------------
@@ -26,6 +27,10 @@ private: // Config
     Config m_config;
 
     void changeSettings();
+
+private: // Cache
+
+    ChangesetCache* m_cache;
 
 private: // Log
 
