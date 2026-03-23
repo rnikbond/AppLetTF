@@ -1,2 +1,2 @@
 # AppLetTFS
-Оконный клиет Team Foundation Server для Linux.
+Оконный клиет TFS для Linux.
