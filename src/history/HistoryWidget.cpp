@@ -19,8 +19,6 @@ HistoryWidget::HistoryWidget( QWidget* parent ) : QWidget(parent), ui(new Ui::Hi
     setupActions();
     setupCtxMenu();
 
-    m_cache = nullptr;
-
     ui->splitter->setSizes( {500, 200} );
 
     ui->detail->hide();
@@ -109,7 +107,6 @@ void HistoryWidget::reload( const QString& path ) {
     ui->historyTable->setRowCount( 0 );
 
     TFRequest tf;
-    tf.setCache ( m_cache  );
     tf.setConfig( m_config );
     tf.history( path );
     emit commandExecuted( tf.m_isErr, tf.m_errCode, tf.m_errText, tf.m_response );
@@ -224,14 +221,3 @@ void HistoryWidget::setConfig( const Config& cfg ) {
     ui->detail->setConfig( cfg );
 }
 //----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Инициализация объекта кэширования
- * \param cache Объект кэширования
- */
-void HistoryWidget::setCache( ChangesetCache* cache ) {
-
-    m_cache = cache;
-}
-//----------------------------------------------------------------------------------------------------------
-

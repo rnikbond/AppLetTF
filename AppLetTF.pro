@@ -13,8 +13,7 @@ INCLUDEPATH += $$PWD/src                         \
                $$PWD/src/workspaces              \
                $$PWD/src/azure_tree              \
                $$PWD/src/changes                 \
-               $$PWD/src/projects_tree/help_tree \
-               $$PWD/src/cache
+               $$PWD/src/projects_tree/help_tree
 
 HEADERS += $$PWD/src/AppLetTF.h                               \
            $$PWD/src/azure_tree/AzureTreeDialog.h             \
@@ -29,8 +28,7 @@ HEADERS += $$PWD/src/AppLetTF.h                               \
            $$PWD/src/history_detail/HistoryDetailWidget.h     \
            $$PWD/src/workspaces/NewWorkspaceDialog.h          \
            $$PWD/src/workspaces/WorkspacesDialog.h            \
-           $$PWD/src/projects_tree/help_tree/HelpTreeDialog.h \
-           src/cache/ChangesetCache.h
+           $$PWD/src/projects_tree/help_tree/HelpTreeDialog.h
 
 SOURCES += $$PWD/main.cpp                                       \
            $$PWD/src/AppLetTF.cpp                               \
@@ -50,8 +48,7 @@ SOURCES += $$PWD/main.cpp                                       \
            $$PWD/src/history_detail/HistoryDetailWidget.cpp     \
            $$PWD/src/workspaces/NewWorkspaceDialog.cpp          \
            $$PWD/src/workspaces/WorkspacesDialog.cpp            \
-           $$PWD/src/projects_tree/help_tree/HelpTreeDialog.cpp \
-           src/cache/ChangesetCache.cpp
+           $$PWD/src/projects_tree/help_tree/HelpTreeDialog.cpp
 
 FORMS   += $$PWD/src/AppLetTF.ui                               \
            $$PWD/src/azure_tree/AzureTreeDialog.ui             \

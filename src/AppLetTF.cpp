@@ -25,8 +25,6 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
     setupArgs   ();
     setupTray   ();
 
-    m_cache = new ChangesetCache;
-
     qApp->installEventFilter( this );
 
     QDir::setCurrent( workDirPath() );
@@ -49,7 +47,6 @@ AppLetTF::AppLetTF( QWidget* parent ) : QMainWindow(parent), ui(new Ui::AppLetTF
 
 AppLetTF::~AppLetTF() {
 
-    delete m_cache;
     delete ui;
 }
 //----------------------------------------------------------------------------------------------------------
@@ -229,7 +226,6 @@ void AppLetTF::init() {
     changeOutput     ( m_config.m_isLog     );
     changeToolBarText( m_config.m_isToolBar );
 
-    ui->projectsTree->setCache ( m_cache  );
     ui->projectsTree->setConfig( m_config );
     ui->changes     ->setConfig( m_config );
 

@@ -6,7 +6,6 @@
 #include <QWidget>
 //----------------------------------------
 #include "Config.h"
-#include "ChangesetCache.h"
 //----------------------------------------
 namespace Ui { class ProjectsTree; }
 //----------------------------------------
@@ -34,7 +33,6 @@ class ProjectsTree : public QWidget {
 
     QMap<QString, QTreeWidgetItem*> m_treeItems;
     Config m_config;
-    ChangesetCache* m_cache;
 
 public:
 
@@ -42,7 +40,6 @@ public:
     ~ProjectsTree();
 
     void setConfig( const Config& cfg );
-    void setCache ( ChangesetCache* cache );
 
     void reload();
     void clear();

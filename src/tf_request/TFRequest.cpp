@@ -1,13 +1,84 @@
 //----------------------------------------
-#include <QDir>
-#include <QDebug>
-#include <QTextCodec>
 #include <QApplication>
-//----------------------------------------
-#include "methods.h"
+#include <QDateTime>
+#include <QDebug>
+#include <QDir>
+#include <QLabel>
+#include <QProgressBar>
+#include <QTextCodec>
+#include <QTimer>
+#include <QVBoxLayout>
 //----------------------------------------
 #include "TFRequest.h"
+#include "qboxlayout.h"
+#include "qnamespace.h"
 //----------------------------------------
+
+class Loader {
+
+public:
+
+    QWidget* overlay;
+    QLabel* label;
+    QProgressBar* progressBar;
+
+public:
+
+    Loader() {
+        QWidget* mainWindow = nullptr;
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            if (widget->isWindow() && widget->isVisible()) {
+                mainWindow = widget;
+                break;
+            }
+        }
+
+        overlay     = new QWidget(mainWindow);
+        label       = new QLabel(overlay);
+        progressBar = new QProgressBar(overlay);
+
+        QVBoxLayout* mainVLayout = new QVBoxLayout(overlay);
+        mainVLayout->addWidget(label);
+        mainVLayout->addWidget(progressBar);
+
+        overlay->setFixedSize(350, 60);
+
+        label->setAlignment(Qt::AlignCenter);
+        label->setStyleSheet("QLabel { color: #222222; background: transparent; }");
+
+        progressBar->setRange(0, 0);                // Значения 0, 0 включают бесконечный режим анимации
+        progressBar->setAlignment(Qt::AlignCenter); // Текст ровно по центру бара
+        progressBar->setTextVisible(true);
+        progressBar->setFormat("Прошло: 0 сек"); // Стартовый
+
+        progressBar->setStyleSheet("QProgressBar {"
+                                   "   border: 1px solid rgba(255, 255, 255, 0.12);"
+                                   "   border-radius: 3px;"                       // Небольшое закругление корпуса
+                                   "   background-color: rgba(30, 30, 30, 0.85);" // Глубокий темный фон
+                                   "   text-align: center;"
+                                   "   color: #FFFFFF;" // Белый текст поверх
+                                   "   font-family: 'Segoe UI', Arial, sans-serif;"
+                                   "   font-size: 12px;"
+                                   "   font-weight: 600;"
+                                   "}"
+                                   "QProgressBar::chunk { "
+                                   "   background-color: qlineargradient(" // Плавный зеленый градиент
+                                   "       x1: 0, y1: 0, x2: 1, y2: 0,"
+                                   "       stop: 0 #22c55e, stop: 1 #4ade80" // От насыщенного к светло-зеленому
+                                   "   );"
+                                   "   border-radius: 3px;" // Закругление самой полосы
+                                   "}");
+
+        if (mainWindow) {
+            overlay->move(mainWindow->rect().center() - overlay->rect().center());
+        }
+    }
+
+    ~Loader() {
+        delete overlay;
+    }
+};
+//----------------------------------------------------------------------------------------------------------
 
 TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
 
@@ -18,17 +89,11 @@ TFRequest::TFRequest( QObject* parent ) : QObject(parent) {
 #endif
 
     m_cmd           = CmdNone;
-    m_cache         = nullptr;
     m_isTouchCursor = true;
 
     m_tf = new QProcess( this );
 
     clear();
-    setAsync( false );
-
-    connect( m_tf, QOverload<int,QProcess::ExitStatus>::of(&QProcess::finished)    , this, &TFRequest::reactOnFinished      );
-    connect( m_tf,                                         &QProcess::stateChanged , this, &TFRequest::reactOnStateChanged  );
-    connect( m_tf,                                         &QProcess::errorOccurred, this, &TFRequest::reactOnErrorOccurred );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -45,11 +110,7 @@ void TFRequest::checkConnection() {
         "-noprompt"
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -67,11 +128,7 @@ void TFRequest::workspaces() {
         "-noprompt"
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -91,11 +148,7 @@ void TFRequest::createWorkspace(const QString& name , const QString &comment ) {
         "-noprompt"
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -114,11 +167,7 @@ void TFRequest::removeWorkspace( const QString& name ) {
         "-noprompt"
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -137,11 +186,7 @@ void TFRequest::workfolds( const QString& workspace ) {
         QString("-login:%1,%2"  ).arg(m_config.m_azure.login, m_config.m_azure.password),
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -163,11 +208,7 @@ void TFRequest::mapWorkfold( const QString& azurePath, const QString& localPath,
         localPath
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -199,11 +240,7 @@ void TFRequest::getDir( const QString& dir, const QString& version , bool isForc
         args.append( QString("-version:%1").arg(version) );
     }
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -221,11 +258,7 @@ void TFRequest::status( const QString& path ) {
         path
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -241,11 +274,7 @@ void TFRequest::add( const QStringList& files ) {
 
     args.append( files );
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -261,11 +290,7 @@ void TFRequest::remove( const QStringList& files ) {
 
     args.append( files );
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -281,11 +306,7 @@ void TFRequest::cancelChanges( const QStringList& pathes ) {
 
     args.append( pathes );
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -306,11 +327,7 @@ void TFRequest::commit( const QString& comment, const QStringList& files ) {
         args.append( files );
     }
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -330,11 +347,7 @@ void TFRequest::entriesDir( const QString& dir, bool isFiles ) {
         args.append( "-folders" );
     }
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -353,11 +366,7 @@ void TFRequest::view( const QString& file, const QString& version ) {
         args.append( QString("-version:C%1").arg(version) );
     }
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -396,11 +405,7 @@ void TFRequest::history( const QString& path , const QString& from, int stopAfte
         path
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -437,11 +442,7 @@ void TFRequest::historyCertain( const QString& path, const QString& version ) {
         "-noprompt",
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -477,11 +478,7 @@ void TFRequest::historyDiffPrev( const QString& path, const QString& version ) {
         "-noprompt",
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -496,11 +493,7 @@ void TFRequest::difference( const QString& file ) {
         file
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -523,89 +516,57 @@ void TFRequest::difference( const QString& file, const QString& version, const Q
         QString("%1;C%2").arg(file, version),
     };
 
-    if( m_isAsync ) {
-        m_tf->start( m_config.m_azure.tfPath, args );
-    } else {
-        execute( args );
-    }
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Обработка изменения состояния процесса программы TF
- * \param state Состояние
- */
-void TFRequest::reactOnStateChanged( QProcess::ProcessState state ) {
-
-    switch( state ) {
-        case QProcess::Starting: {
-            clear();
-            if( m_isTouchCursor ) {
-                QApplication::setOverrideCursor( Qt::WaitCursor );
-            }
-            break;
-        }
-        default: break;
-    }
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Обработка данных после завершения работы программы TF
- * \param exitCode   Код завершения работы программы
- * \param exitStatus Статус завершения работы программы
- */
-void TFRequest::reactOnFinished( int exitCode, QProcess::ExitStatus exitStatus ) {
-
-    Q_UNUSED( exitCode   );
-    Q_UNUSED( exitStatus );
-
-    parseResponse();
-    emit executed();
-
-    if( m_isTouchCursor ) {
-        QApplication::restoreOverrideCursor();
-    }
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Обработка ошибки запуска процесса
- * \param error Информация об ошибке
- *
- * Возникает, если не удается запустить программу TF.
- * При вызове этого слота, слот \a reactOnFinished() не вызывается.
- */
-void TFRequest::reactOnErrorOccurred( QProcess::ProcessError error ) {
-
-    Q_UNUSED( error );
-
-    parseResponse();
-    emit executed();
-
-    if( m_isTouchCursor ) {
-        QApplication::restoreOverrideCursor();
-    }
+    execute(args);
 }
 //----------------------------------------------------------------------------------------------------------
 
 /*!
  * \brief Выполнение TF запроса с ожиданием завершения
- * \param args Аргументы запроса
+ * \param args        Аргументы запроса
+ * \param timeout_sec Таймаут выполнения команды в секундах
  */
-void TFRequest::execute( const QStringList& args ) {
+void TFRequest::execute(const QStringList& args) {
 
     clear();
 
-    if( m_isTouchCursor ) {
-        QApplication::setOverrideCursor( Qt::WaitCursor );
+    if (m_isTouchCursor) {
+        QApplication::setOverrideCursor(Qt::WaitCursor);
     }
 
-    m_tf->start( m_config.m_azure.tfPath, args );
-    m_tf->waitForFinished();
+    QEventLoop eventLoop;
+
+    //: Связываем завершение процесса (или ошибку) с выходом из цикла событий
+    connect(m_tf, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), &eventLoop, &QEventLoop::quit);
+    connect(m_tf, &QProcess::errorOccurred, &eventLoop, &QEventLoop::quit);
+
+    Loader loader;
+
+    //: Индикация выполнения процесса
+    QTimer timer_loader;
+    int elapsedSeconds = 0;
+    QObject::connect(&timer_loader, &QTimer::timeout, [&loader, &elapsedSeconds]() {
+        elapsedSeconds++;
+
+        //: На 5-й секуне отображаем инликацию
+        if (elapsedSeconds == 5) {
+            loader.overlay->show();
+            loader.overlay->raise();
+        }
+
+        QString fmt = (elapsedSeconds < 60) ? "s сек" : "m мин ss сек";
+        QTime time  = QTime::fromMSecsSinceStartOfDay(elapsedSeconds * 1000);
+        loader.label->setText(tr("Выполняется: %1").arg(time.toString(fmt)));
+    });
+    timer_loader.start(1000);
+
+    m_tf->start(m_config.m_azure.tfPath, args);
+
+    //: Ждем выполнения процесса
+    eventLoop.exec(QEventLoop::ExcludeUserInputEvents);
+
     parseResponse();
 
-    if( m_isTouchCursor ) {
+    if (m_isTouchCursor) {
         QApplication::restoreOverrideCursor();
     }
 }
@@ -638,51 +599,6 @@ void TFRequest::parseResponse() {
     }
 
     m_response = m_codec->toUnicode(m_tf->readAllStandardOutput()).split("\n", Qt::SkipEmptyParts);
-
-    updateCache();
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Обновленеи информации в кэше
- */
-void TFRequest::updateCache() {
-
-    if( m_cache == nullptr ) {
-        return;
-    }
-
-    switch( m_cmd ) {
-        case CmdGetLastest:
-        break;
-
-        case CmdStatus:
-        break;
-
-        case CmdHistory: {
-            QList<HistoryItem> historyItems = parseHistory( m_response );
-            for( HistoryItem item : historyItems ) {
-                qDebug() << item.version;
-            }
-
-            break;
-        }
-        default: break;
-    }
-
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Изменение синхронного/асинхронного режима
- * \param isAsync Признак асинхронности
- *
- * Если isAsync == TRUE, после выполнения запроса испускается сигнал \a executed().
- */
-void TFRequest::setAsync( bool isAsync ) {
-
-    m_isAsync = isAsync;
-    m_tf->blockSignals( !m_isAsync );
 }
 //----------------------------------------------------------------------------------------------------------
 
@@ -698,16 +614,6 @@ void TFRequest::setConfig( const Config& cfg ) {
         QString path = m_config.m_azure.workfoldes.begin().value();
         m_tf->setWorkingDirectory( path );
     }
-}
-//----------------------------------------------------------------------------------------------------------
-
-/*!
- * \brief Инициализация объекта кэширования
- * \param cache Объект кэширования
- */
-void TFRequest::setCache( ChangesetCache* cache ) {
-
-    m_cache = cache;
 }
 //----------------------------------------------------------------------------------------------------------
 

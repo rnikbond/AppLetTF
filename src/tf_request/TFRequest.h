@@ -6,28 +6,27 @@
 #include <QProcess>
 //----------------------------------------
 #include "Config.h"
-#include "ChangesetCache.h"
+//----------------------------------------
+class QProgressBar;
 //----------------------------------------
 
 class TFRequest : public QObject {
 
-    Q_OBJECT
+    Q_OBJECT;
 
-    QProcess  *     m_tf     ;
-    QTextCodec*     m_codec  ;
-    Config          m_config ;
-    ChangesetCache* m_cache  ;
-    bool            m_isAsync; /// признак асинхронного выполнения запроса
+    QProcess* m_tf;
+    QTextCodec* m_codec;
+    Config m_config;
 
 public:
 
     enum Commands {
-        CmdNone        , ///< Отсутствие команды
-        CmdWorkspaces  , ///< Команда "workspaces"
-        CmdStatus      , ///< Команда "status"
-        CmdHistory     , ///< Команда "history"
-        CmdGetLastest  , ///< Команда "get"
-        CmdGetVersion  , ///< Команда "get -version"
+        CmdNone,       ///< Отсутствие команды
+        CmdWorkspaces, ///< Команда "workspaces"
+        CmdStatus,     ///< Команда "status"
+        CmdHistory,    ///< Команда "history"
+        CmdGetLastest, ///< Команда "get"
+        CmdGetVersion, ///< Команда "get -version"
     };
 
 public:
@@ -44,9 +43,7 @@ public:
 
     TFRequest( QObject* parent = nullptr );
 
-    void setAsync( bool isAsync );
     void setConfig( const Config& cfg );
-    void setCache ( ChangesetCache* cache );
     void clear();
 
 public: // Requests
@@ -80,18 +77,8 @@ public: // Requests
 
 private:
 
-    void reactOnStateChanged( QProcess::ProcessState state );
-    void reactOnFinished( int exitCode, QProcess::ExitStatus exitStatus );
-    void reactOnErrorOccurred( QProcess::ProcessError error );
-
-    void execute( const QStringList& args );
+    void execute(const QStringList& args);
     void parseResponse();
-
-    void updateCache();
-
-signals:
-
-    void executed();
 };
 //----------------------------------------------------------------------------------------------------------
 
